@@ -92,20 +92,41 @@
   .join-instruction {
     background: var(--bg-glass);
     border: 1px solid var(--gold);
-    border-radius: 20px;
-    padding: 32px 72px;
+    border-radius: 24px;
+    padding: 32px 60px;
     text-align: center;
     backdrop-filter: blur(12px);
     box-shadow: 0 0 40px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 48px;
+  }
+  .join-qr-wrap {
+    flex-shrink: 0;
+  }
+  .join-qr-wrap img {
+    width: 13vw;
+    height: 13vw;
+    min-width: 120px;
+    min-height: 120px;
+    border-radius: 12px;
+    border: 3px solid var(--gold);
+    padding: 6px;
+    background: #fff;
+    display: block;
+    box-shadow: 0 0 20px var(--gold-glow);
+  }
+  .join-text-wrap {
+    text-align: left;
   }
   .join-instruction .url {
-    font-size: 2.6vw;
+    font-size: 2vw;
     font-weight: 800;
     color: var(--gold-light);
     letter-spacing: 2px;
   }
   .join-instruction .hint {
-    font-size: 1.2vw;
+    font-size: 1.1vw;
     color: var(--text-muted);
     margin-top: 10px;
   }
@@ -400,8 +421,13 @@
   <div class="lobby-title">💍 Kai &amp; Bella 婚禮問答</div>
   <div class="lobby-subtitle">掃描 QR code 或輸入網址加入遊戲</div>
   <div class="join-instruction">
-    <div class="url" id="join-url">載入中...</div>
-    <div class="hint">用手機瀏覽器開啟，輸入暱稱即可加入</div>
+    <div class="join-qr-wrap">
+      <img id="join-qr" src="" alt="QR Code">
+    </div>
+    <div class="join-text-wrap">
+      <div class="url" id="join-url">載入中...</div>
+      <div class="hint">📱 手機掃 QR code 或輸入網址加入</div>
+    </div>
   </div>
   <div id="lobby-player-count">已加入 <span id="player-count">0</span> 位賓客</div>
 </div>
@@ -671,7 +697,9 @@ function handleMessage(data) {
 
     case 'state_sync':
       document.getElementById('player-count').textContent = data.player_count;
+      const playUrl = `${location.protocol}//${location.hostname}/quiz/play`;
       document.getElementById('join-url').textContent = `${location.hostname}/quiz/play`;
+      document.getElementById('join-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(playUrl)}`;
       showScreen('lobby');
       break;
 
