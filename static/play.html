@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>婚禮問答 — 加入遊戲</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .screen { display: none; width: 100%; max-width: 480px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── JOIN ── */
+  #screen-join { gap: 24px; }
+  .join-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(90deg, #f8c8d4, #fde8b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .join-sub { font-size: 1rem; color: #aaa; text-align: center; }
+  .input-field {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 1.4rem;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: #8be9fd; }
+  .input-field::placeholder { color: #666; }
+  .btn-join {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8c8d4, #fde8b0);
+    color: #1a1a2e;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .btn-join:active { transform: scale(0.97); }
+  .btn-join:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-msg { color: #ff5555; font-size: 0.9rem; }
+
+  /* ── LOBBY ── */
+  #screen-lobby { gap: 20px; text-align: center; }
+  .lobby-nickname {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #50fa7b;
+  }
+  .lobby-wait {
+    font-size: 1.1rem;
+    color: #aaa;
+    line-height: 1.6;
+  }
+  .lobby-player-count {
+    font-size: 1rem;
+    color: #8be9fd;
+    padding: 8px 20px;
+    border: 1px solid #8be9fd;
+    border-radius: 20px;
+  }
+  .pulse-dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    background: #50fa7b;
+    border-radius: 50%;
+    animation: pulseDot 1.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.5; }
+  }
+
+  /* ── QUESTION ── */
+  #screen-question { gap: 16px; }
+  .q-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+  .q-timer {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #50fa7b;
+    transition: color 0.3s;
+  }
+  .q-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.5;
+    color: #fff;
+  }
+  .q-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+  .options-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .opt-btn {
+    width: 100%;
+    padding: 18px 20px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform 0.1s, filter 0.2s;
+    text-align: left;
+  }
+  .opt-btn:active { transform: scale(0.97); }
+  .opt-btn:disabled { filter: brightness(0.5); cursor: not-allowed; }
+  .opt-btn.A { background: #e21b3c; }
+  .opt-btn.B { background: #1368ce; }
+  .opt-btn.C { background: #d89e00; }
+  .opt-btn.D { background: #26890c; }
+  .opt-btn.selected { filter: brightness(1.2); outline: 3px solid #fff; outline-offset: 2px; }
+  .opt-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 900;
+    flex-shrink: 0;
+  }
+  .opt-img { width: 100%; max-height: 60px; object-fit: contain; border-radius: 8px; }
+
+  /* ── WAITING ── */
+  #screen-waiting { gap: 20px; text-align: center; }
+  .waiting-icon { font-size: 4rem; animation: spin 2s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .waiting-text { font-size: 1.2rem; color: #aaa; }
+  .points-earned {
+    font-size: 2.5rem;
+    font-weight: 900;
+  }
+  .points-earned.correct { color: #50fa7b; }
+  .points-earned.wrong   { color: #ff5555; }
+  .total-score { font-size: 1rem; color: #8be9fd; }
+
+  /* ── RESULT ── */
+  #screen-result { gap: 20px; text-align: center; }
+  .result-icon { font-size: 5rem; }
+  .result-label { font-size: 1.5rem; font-weight: 700; }
+  .result-pts {
+    font-size: 3rem;
+    font-weight: 900;
+  }
+  .result-pts.correct { color: #50fa7b; }
+  .result-pts.wrong   { color: #ff5555; }
+
+  /* ── LEADERBOARD ── */
+  #screen-leaderboard { gap: 16px; }
+  .lb-title { font-size: 1.4rem; font-weight: 900; color: #fde8b0; }
+  .lb-my-rank {
+    font-size: 1.1rem;
+    color: #8be9fd;
+    text-align: center;
+  }
+  .lb-rows { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .lb-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px; border-radius: 12px;
+  }
+  .lb-row.rank-1 { background: linear-gradient(90deg, #b8860b, #ffd700); color: #1a1a2e; }
+  .lb-row.rank-2 { background: linear-gradient(90deg, #778899, #c0c0c0); color: #1a1a2e; }
+  .lb-row.rank-3 { background: linear-gradient(90deg, #8b4513, #cd7f32); }
+  .lb-row.rank-other { background: rgba(255,255,255,0.1); }
+  .lb-rank-num { font-size: 1.4rem; font-weight: 900; width: 36px; text-align: center; }
+  .lb-name { flex: 1; font-size: 1rem; font-weight: 600; }
+  .lb-score { font-size: 1rem; font-weight: 700; }
+
+  /* ── FINISH ── */
+  #screen-finish { gap: 20px; text-align: center; }
+  .finish-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #f8c8d4, #fde8b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .reconnect-msg { font-size: 0.9rem; color: #ff5555; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- JOIN -->
+<div id="screen-join" class="screen active">
+  <div style="font-size:2.5rem">💍</div>
+  <div class="join-title">Kai & Bella<br>婚禮問答</div>
+  <div class="join-sub">輸入你的暱稱加入遊戲</div>
+  <input type="text" id="nickname-input" class="input-field"
+         placeholder="你的暱稱" maxlength="12" autocomplete="off">
+  <button id="btn-join" class="btn-join" onclick="joinGame()">加入遊戲 🎮</button>
+  <div id="join-error" class="error-msg"></div>
+</div>
+
+<!-- LOBBY -->
+<div id="screen-lobby" class="screen">
+  <div style="font-size:2.5rem">🎉</div>
+  <div class="lobby-nickname" id="lobby-nickname">玩家名稱</div>
+  <div class="lobby-wait">
+    遊戲即將開始<br>請稍候 <span class="pulse-dot"></span>
+  </div>
+  <div class="lobby-player-count" id="lobby-count">已加入 0 位玩家</div>
+</div>
+
+<!-- QUESTION -->
+<div id="screen-question" class="screen">
+  <div class="q-header">
+    <span id="q-progress">第 1 / 10 題</span>
+    <div class="q-timer" id="q-timer">20</div>
+  </div>
+  <img id="q-img" class="q-image" style="display:none" src="" alt="">
+  <div id="q-text" class="q-text">題目載入中...</div>
+  <div class="options-list" id="options-list"></div>
+</div>
+
+<!-- WAITING (after submitting answer) -->
+<div id="screen-waiting" class="screen">
+  <div class="waiting-icon">⏳</div>
+  <div class="waiting-text">已送出，等待公佈答案</div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen">
+  <div id="result-icon" class="result-icon">🎉</div>
+  <div id="result-label" class="result-label">答對了！</div>
+  <div id="result-pts" class="result-pts correct">+850 分</div>
+  <div id="result-total" class="total-score">累積 850 分</div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="screen-leaderboard" class="screen">
+  <div class="lb-title">🏆 排行榜</div>
+  <div class="lb-my-rank" id="lb-my-rank"></div>
+  <div class="lb-rows" id="lb-rows"></div>
+</div>
+
+<!-- FINISH -->
+<div id="screen-finish" class="screen">
+  <div style="font-size:3rem">🥂</div>
+  <div class="finish-title">遊戲結束！<br>恭喜 Kai & Bella</div>
+  <div class="lb-rows" id="final-lb-rows" style="width:100%"></div>
+</div>
+
+<script>
+const WS_URL = `ws://${location.host}/ws`;
+let ws, myNickname = '', myScore = 0;
+const LABELS = ['A','B','C','D'];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ── 音效 ──
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+function ensureAudio() { if (!actx) actx = new AudioCtx(); }
+function playTone(freq, dur, type='sine', vol=0.3) {
+  ensureAudio();
+  const osc = actx.createOscillator();
+  const gain = actx.createGain();
+  osc.connect(gain); gain.connect(actx.destination);
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, actx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+  osc.start(); osc.stop(actx.currentTime + dur);
+}
+function sfxTap()     { playTone(600, 0.05, 'sine', 0.2); }
+function sfxCorrect() { [523,659,784].forEach((f,i) => setTimeout(()=>playTone(f,0.15,'sine',0.35),i*80)); }
+function sfxWrong()   { playTone(160, 0.35, 'sawtooth', 0.3); }
+function sfxTick()    { playTone(440, 0.06, 'square', 0.1); }
+
+// ── 倒數 ──
+let timerInterval = null;
+function startTimer(limit, remaining) {
+  clearInterval(timerInterval);
+  let t = remaining !== undefined ? remaining : limit;
+  const el = document.getElementById('q-timer');
+  function update() {
+    el.textContent = Math.ceil(t);
+    el.style.color = t <= 5 ? '#ff5555' : t <= 10 ? '#ffd700' : '#50fa7b';
+    if (t <= 5 && t > 0) sfxTick();
+    if (t <= 0) clearInterval(timerInterval);
+    t = Math.max(0, t - 1);
+  }
+  update();
+  timerInterval = setInterval(update, 1000);
+}
+
+// ── 加入遊戲 ──
+let wsReady = false;
+let pendingJoin = null;
+
+function joinGame() {
+  const nickname = document.getElementById('nickname-input').value.trim();
+  const errEl = document.getElementById('join-error');
+  if (!nickname) { errEl.textContent = '請輸入暱稱'; return; }
+  errEl.textContent = '';
+  document.getElementById('btn-join').disabled = true;
+  myNickname = nickname;
+  if (wsReady) {
+    ws.send(JSON.stringify({ type: 'player', nickname }));
+  } else {
+    pendingJoin = nickname;
+    connectWS();
+  }
+}
+
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    wsReady = true;
+    if (pendingJoin) {
+      ws.send(JSON.stringify({ type: 'player', nickname: pendingJoin }));
+      pendingJoin = null;
+    }
+  };
+  ws.onmessage = e => handleMsg(JSON.parse(e.data));
+  ws.onclose = () => {
+    wsReady = false;
+    setTimeout(connectWS, 2000);
+  };
+  ws.onerror = () => ws.close();
+}
+
+function sendAction(action, extra={}) {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ action, ...extra }));
+  }
+}
+
+// ── 訊息處理 ──
+function handleMsg(data) {
+  switch(data.type) {
+    case 'error':
+      document.getElementById('join-error').textContent = data.msg;
+      document.getElementById('btn-join').disabled = false;
+      break;
+
+    case 'joined':
+      myNickname = data.nickname;
+      document.getElementById('lobby-nickname').textContent = `👋 ${data.nickname}`;
+      showScreen('lobby');
+      break;
+
+    case 'player_count':
+      document.getElementById('lobby-count').textContent = `已加入 ${data.count} 位玩家`;
+      break;
+
+    case 'question_start':
+      clearInterval(timerInterval);
+      showScreen('question');
+      document.getElementById('q-progress').textContent = `第 ${data.index+1} / ${data.total} 題`;
+      const imgEl = document.getElementById('q-img');
+      if (data.image) { imgEl.src = data.image; imgEl.style.display = 'block'; }
+      else { imgEl.style.display = 'none'; }
+      document.getElementById('q-text').textContent = data.text;
+      buildOptions(data.options, data.option_type || 'text');
+      startTimer(data.time_limit, data.remaining);
+      break;
+
+    case 'answer_received':
+      clearInterval(timerInterval);
+      showScreen('waiting');
+      break;
+
+    case 'personal_result':
+      clearInterval(timerInterval);
+      const correct = data.correct;
+      const pts = data.points_earned;
+      myScore = data.total_score;
+      document.getElementById('result-icon').textContent = correct ? '🎉' : '😅';
+      document.getElementById('result-label').textContent = correct ? '答對了！' : (data.answered ? '答錯了...' : '沒有作答');
+      const ptsEl = document.getElementById('result-pts');
+      ptsEl.textContent = correct ? `+${pts} 分` : '+0 分';
+      ptsEl.className = `result-pts ${correct ? 'correct' : 'wrong'}`;
+      document.getElementById('result-total').textContent = `累積 ${myScore} 分`;
+      if (correct) sfxCorrect(); else sfxWrong();
+      showScreen('result');
+      break;
+
+    case 'leaderboard':
+      buildLeaderboard(data.leaderboard, 'lb-rows', data.is_final);
+      showScreen('leaderboard');
+      break;
+
+    case 'game_finish':
+      buildLeaderboard(data.leaderboard, 'final-lb-rows', true);
+      showScreen('finish');
+      break;
+
+    case 'game_reset':
+      myScore = 0;
+      document.getElementById('nickname-input').value = '';
+      document.getElementById('btn-join').disabled = false;
+      showScreen('join');
+      break;
+  }
+}
+
+// ── 建立選項按鈕 ──
+function buildOptions(options, type) {
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = `opt-btn ${LABELS[i]}`;
+    btn.id = `opt-${i}`;
+    const icon = document.createElement('div');
+    icon.className = 'opt-icon';
+    icon.textContent = LABELS[i];
+    btn.appendChild(icon);
+    if (type === 'image') {
+      const img = document.createElement('img');
+      img.src = opt; img.className = 'opt-img'; img.alt = LABELS[i];
+      btn.appendChild(img);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = opt;
+      btn.appendChild(span);
+    }
+    btn.onclick = () => submitAnswer(i);
+    list.appendChild(btn);
+  });
+}
+
+// ── 送出答案 ──
+function submitAnswer(optIndex) {
+  sfxTap();
+  // 禁用所有按鈕
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  document.getElementById(`opt-${optIndex}`)?.classList.add('selected');
+  sendAction('answer', { option: optIndex });
+}
+
+// ── 排行榜 ──
+function buildLeaderboard(list, containerId, isFinal) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  const myRankEl = document.getElementById('lb-my-rank');
+  let myRank = null;
+  list.forEach((item, i) => {
+    if (item.nickname === myNickname) myRank = item.rank;
+    const row = document.createElement('div');
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+    row.className = `lb-row ${rankClass}`;
+    const icons = ['🥇','🥈','🥉'];
+    const rankNum = document.createElement('div');
+    rankNum.className = 'lb-rank-num';
+    rankNum.textContent = i < 3 ? icons[i] : item.rank;
+    const name = document.createElement('div');
+    name.className = 'lb-name';
+    name.textContent = item.nickname + (item.nickname === myNickname ? ' 👈' : '');
+    const score = document.createElement('div');
+    score.className = 'lb-score';
+    score.textContent = item.score.toLocaleString() + ' 分';
+    row.appendChild(rankNum); row.appendChild(name); row.appendChild(score);
+    el.appendChild(row);
+  });
+  if (myRankEl) {
+    myRankEl.textContent = myRank ? `你目前排名第 ${myRank} 名` : '';
+  }
+}
+
+document.getElementById('nickname-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinGame();
+});
+document.addEventListener('touchstart', ensureAudio);
+document.addEventListener('click', ensureAudio);
+
+// 自動初始化 WebSocket（等用戶按加入才送 hello）
+connectWS();
+</script>
+</body>
+</html>

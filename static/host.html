@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>婚禮問答 — MC 控制台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    background: #111;
+    color: #fff;
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #screen-login {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; gap: 20px;
+  }
+  .login-title { font-size: 1.8rem; font-weight: 900; color: #fde8b0; }
+  .login-input {
+    padding: 14px 20px; font-size: 1.2rem; width: 280px;
+    border: 2px solid #444; border-radius: 12px;
+    background: #222; color: #fff; text-align: center; outline: none;
+  }
+  .login-btn {
+    padding: 14px 40px; font-size: 1.1rem; font-weight: 700;
+    border: none; border-radius: 12px;
+    background: #fde8b0; color: #111; cursor: pointer;
+  }
+  .login-error { color: #ff5555; font-size: 0.9rem; }
+
+  /* ── MAIN ── */
+  #screen-main { display: none; }
+  .header {
+    background: #1a1a2e;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+  }
+  .header-title { font-size: 1.2rem; font-weight: 700; color: #fde8b0; }
+  .status-badge {
+    padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+  }
+  .status-badge.lobby    { background: #1368ce; }
+  .status-badge.question { background: #26890c; }
+  .status-badge.reveal   { background: #d89e00; color: #111; }
+  .status-badge.leaderboard { background: #8b5cf6; }
+  .status-badge.finished { background: #e21b3c; }
+
+  .main-body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+    min-height: calc(100vh - 61px);
+  }
+
+  /* ── 左：控制區 ── */
+  .ctrl-panel {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-right: 1px solid #222;
+  }
+
+  .info-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .info-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 14px 20px;
+    flex: 1;
+    min-width: 120px;
+  }
+  .info-card .label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+  .info-card .value { font-size: 1.6rem; font-weight: 900; color: #8be9fd; }
+
+  .section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #555;
+    margin-bottom: -8px;
+  }
+
+  /* 控制按鈕 */
+  .ctrl-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+  }
+  .ctrl-btn:active { transform: scale(0.98); }
+  .ctrl-btn:disabled { filter: brightness(0.4); cursor: not-allowed; }
+  .btn-start    { background: #50fa7b; color: #111; }
+  .btn-reveal   { background: #ffd700; color: #111; }
+  .btn-lb       { background: #8b5cf6; }
+  .btn-next     { background: #1368ce; }
+  .btn-reset    { background: #e21b3c; margin-top: 10px; font-size: 0.95rem; }
+  .btn-reload   { background: #444; font-size: 0.9rem; }
+
+  /* 當前題目預覽 */
+  .q-preview {
+    background: #1a1a2e;
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .q-preview .q-num { font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+  .q-preview .q-txt { font-size: 1rem; font-weight: 600; margin-bottom: 12px; line-height: 1.5; }
+  .q-preview .opts  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt-preview {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .opt-preview.A { background: rgba(226,27,60,0.25); border: 1px solid #e21b3c; }
+  .opt-preview.B { background: rgba(19,104,206,0.25); border: 1px solid #1368ce; }
+  .opt-preview.C { background: rgba(216,158,0,0.25); border: 1px solid #d89e00; }
+  .opt-preview.D { background: rgba(38,137,12,0.25); border: 1px solid #26890c; }
+  .opt-preview.correct { outline: 2px solid #50fa7b; }
+  .opt-label { font-weight: 900; }
+
+  /* 答題進度條 */
+  .progress-bar-wrap {
+    height: 20px;
+    background: #222;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #50fa7b, #8be9fd);
+    border-radius: 10px;
+    transition: width 0.4s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #111;
+  }
+  .answered-text { font-size: 0.85rem; color: #8be9fd; text-align: right; }
+
+  /* ── 右：玩家名單 ── */
+  .player-panel {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 61px);
+  }
+  .player-panel-title { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+  .player-list { display: flex; flex-direction: column; gap: 6px; }
+  .player-item {
+    background: #1a1a2e;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
+  .player-name { font-weight: 600; }
+  .player-score { color: #8be9fd; font-size: 0.85rem; }
+  .player-answered { color: #50fa7b; font-size: 0.75rem; }
+
+  /* ── LOG ── */
+  .log-area {
+    background: #0a0a0a;
+    border-top: 1px solid #222;
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    color: #555;
+    max-height: 100px;
+    overflow-y: auto;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div style="font-size:2rem">🎛️</div>
+  <div class="login-title">MC 控制台</div>
+  <input type="password" id="pw-input" class="login-input" placeholder="輸入密碼" autocomplete="off">
+  <button class="login-btn" onclick="doLogin()">登入</button>
+  <div id="login-error" class="login-error"></div>
+</div>
+
+<!-- MAIN -->
+<div id="screen-main">
+  <div class="header">
+    <div class="header-title">🎛️ 婚禮問答 — MC 控制台</div>
+    <div id="phase-badge" class="status-badge lobby">大廳</div>
+  </div>
+
+  <div class="main-body">
+    <!-- 控制區 -->
+    <div class="ctrl-panel">
+      <div class="info-row">
+        <div class="info-card">
+          <div class="label">玩家人數</div>
+          <div class="value" id="info-players">0</div>
+        </div>
+        <div class="info-card">
+          <div class="label">目前題數</div>
+          <div class="value" id="info-q">-</div>
+        </div>
+        <div class="info-card">
+          <div class="label">總題數</div>
+          <div class="value" id="info-total">0</div>
+        </div>
+      </div>
+
+      <!-- 答題進度（QUESTION 時顯示）-->
+      <div id="answer-progress-section" style="display:none">
+        <div class="section-title">答題進度</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progress-bar" style="width:0%">0%</div>
+        </div>
+        <div class="answered-text" id="answered-text">0 / 0 人已答</div>
+      </div>
+
+      <!-- 當前題目預覽 -->
+      <div id="q-preview-section" style="display:none">
+        <div class="section-title">當前題目</div>
+        <div class="q-preview">
+          <div class="q-num" id="prev-num">第 1 題</div>
+          <div class="q-txt" id="prev-txt">-</div>
+          <div class="opts" id="prev-opts"></div>
+        </div>
+      </div>
+
+      <!-- 主要控制按鈕 -->
+      <div class="section-title">遊戲控制</div>
+      <button id="btn-start"  class="ctrl-btn btn-start"  onclick="sendCmd('start_game')">▶ 開始遊戲</button>
+      <button id="btn-reveal" class="ctrl-btn btn-reveal"  onclick="sendCmd('reveal_answer')" disabled>📊 公佈答案</button>
+      <button id="btn-lb"     class="ctrl-btn btn-lb"      onclick="sendCmd('show_leaderboard')" disabled>🏆 顯示排行榜</button>
+      <button id="btn-next"   class="ctrl-btn btn-next"    onclick="sendCmd('next_question')" disabled>⏭ 下一題</button>
+
+      <button class="ctrl-btn btn-reload" onclick="sendCmd('reload_questions')">🔄 重新載入題目</button>
+      <button class="ctrl-btn btn-reset"  onclick="confirmReset()">⚠️ 重置遊戲</button>
+    </div>
+
+    <!-- 玩家名單 -->
+    <div class="player-panel">
+      <div class="player-panel-title">玩家名單</div>
+      <div class="player-list" id="player-list">
+        <div style="color:#555; font-size:0.85rem">等待玩家加入...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-area" id="log-area"></div>
+</div>
+
+<script>
+const WS_URL = `ws://${location.host}/ws`;
+let ws, password = '';
+let players = {};
+
+function doLogin() {
+  password = document.getElementById('pw-input').value;
+  document.getElementById('login-error').textContent = '';
+  connectWS();
+}
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'host', password }));
+  };
+  ws.onmessage = e => handleMsg(JSON.parse(e.data));
+  ws.onclose = () => {
+    log('連線斷開，2秒後重連...');
+    setTimeout(() => { if (document.getElementById('screen-main').style.display !== 'none') connectWS(); }, 2000);
+  };
+  ws.onerror = () => ws.close();
+}
+
+function sendCmd(action) {
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ action }));
+    log(`> ${action}`);
+  }
+}
+
+function confirmReset() {
+  if (confirm('確定要重置遊戲嗎？所有玩家將被踢出。')) sendCmd('reset_game');
+}
+
+function log(msg) {
+  const el = document.getElementById('log-area');
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML += `<div>[${time}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── 按鈕狀態管理 ──
+function updateButtons(phase) {
+  const b = id => document.getElementById(id);
+  b('btn-start').disabled  = phase !== 'LOBBY';
+  b('btn-reveal').disabled = phase !== 'QUESTION';
+  b('btn-lb').disabled     = phase !== 'REVEAL';
+  b('btn-next').disabled   = phase !== 'LEADERBOARD';
+  document.getElementById('answer-progress-section').style.display = phase === 'QUESTION' ? 'block' : 'none';
+
+  const phaseMap = { LOBBY:'大廳', QUESTION:'作答中', REVEAL:'揭曉', LEADERBOARD:'排行榜', FINISHED:'結束' };
+  const badgeMap = { LOBBY:'lobby', QUESTION:'question', REVEAL:'reveal', LEADERBOARD:'leaderboard', FINISHED:'finished' };
+  const badge = document.getElementById('phase-badge');
+  badge.textContent = phaseMap[phase] || phase;
+  badge.className = `status-badge ${badgeMap[phase] || ''}`;
+}
+
+// ── 題目預覽 ──
+function showQuestionPreview(data) {
+  document.getElementById('q-preview-section').style.display = 'block';
+  document.getElementById('prev-num').textContent = `第 ${data.index+1} / ${data.total} 題`;
+  document.getElementById('prev-txt').textContent = data.text;
+  const opts = document.getElementById('prev-opts');
+  opts.innerHTML = '';
+  const LABELS = ['A','B','C','D'];
+  data.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = `opt-preview ${LABELS[i]}${i===data.correct?'':''} `;
+    // correct 只在 reveal 後顯示，這裡不顯示
+    div.innerHTML = `<span class="opt-label">${LABELS[i]}</span> ${typeof opt === 'string' ? opt.substring(0,30) : '[圖片]'}`;
+    opts.appendChild(div);
+  });
+  // 存 correct 用於 reveal 後標示
+  opts._correct = data.correct;
+}
+
+function markCorrectOption(correct) {
+  const opts = document.getElementById('prev-opts');
+  opts.querySelectorAll('.opt-preview').forEach((el, i) => {
+    if (i === correct) el.classList.add('correct');
+  });
+}
+
+// ── 玩家名單 ──
+function updatePlayerList(data) {
+  players = {};
+  if (data.players) {
+    data.players.forEach(p => { players[p.nickname] = p; });
+  }
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('player-list');
+  const names = Object.values(players);
+  if (names.length === 0) {
+    list.innerHTML = '<div style="color:#555; font-size:0.85rem">等待玩家加入...</div>';
+    return;
+  }
+  names.sort((a,b) => (b.score||0) - (a.score||0));
+  list.innerHTML = names.map(p => `
+    <div class="player-item">
+      <span class="player-name">${p.nickname}</span>
+      <span class="player-score">${(p.score||0).toLocaleString()} 分</span>
+    </div>
+  `).join('');
+}
+
+// ── 訊息處理 ──
+function handleMsg(data) {
+  switch(data.type) {
+    case 'error':
+      document.getElementById('login-error').textContent = data.msg;
+      break;
+
+    case 'host_welcome':
+      document.getElementById('screen-login').style.display = 'none';
+      document.getElementById('screen-main').style.display = 'block';
+      document.getElementById('info-total').textContent = data.total_questions;
+      document.getElementById('info-players').textContent = data.player_count;
+      document.getElementById('info-q').textContent = data.current_index >= 0 ? data.current_index + 1 : '-';
+      updateButtons(data.phase);
+      log('✅ 已連線');
+      break;
+
+    case 'player_count':
+      document.getElementById('info-players').textContent = data.count;
+      // 建立玩家清單
+      players = {};
+      data.nicknames.forEach(n => { players[n] = { nickname: n, score: 0 }; });
+      renderPlayers();
+      log(`玩家加入，目前 ${data.count} 人`);
+      break;
+
+    case 'question_start':
+      document.getElementById('info-q').textContent = data.index + 1;
+      updateButtons('QUESTION');
+      showQuestionPreview(data);
+      document.getElementById('progress-bar').style.width = '0%';
+      document.getElementById('progress-bar').textContent = '0%';
+      document.getElementById('answered-text').textContent = `0 / ${data.total} 人已答`;
+      log(`📝 第 ${data.index+1} 題開始`);
+      break;
+
+    case 'answer_progress':
+      const pct = data.total > 0 ? Math.round(data.answered / data.total * 100) : 0;
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-bar').textContent = pct > 10 ? pct + '%' : '';
+      document.getElementById('answered-text').textContent = `${data.answered} / ${data.total} 人已答`;
+      break;
+
+    case 'answer_reveal':
+      updateButtons('REVEAL');
+      markCorrectOption(data.correct);
+      // 更新玩家分數
+      if (data.leaderboard) {
+        data.leaderboard.forEach(p => {
+          if (players[p.nickname]) players[p.nickname].score = p.score;
+          else players[p.nickname] = { nickname: p.nickname, score: p.score };
+        });
+        renderPlayers();
+      }
+      log(`✅ 答案公佈：${['A','B','C','D'][data.correct]}`);
+      break;
+
+    case 'leaderboard':
+      updateButtons('LEADERBOARD');
+      log('🏆 排行榜顯示');
+      break;
+
+    case 'game_finish':
+      updateButtons('FINISHED');
+      log('🎉 遊戲結束');
+      break;
+
+    case 'game_reset':
+      players = {};
+      renderPlayers();
+      document.getElementById('info-q').textContent = '-';
+      document.getElementById('q-preview-section').style.display = 'none';
+      updateButtons('LOBBY');
+      log('⚠️ 遊戲已重置');
+      break;
+
+    case 'questions_loaded':
+      document.getElementById('info-total').textContent = data.count;
+      log(`🔄 題目重新載入：${data.count} 題`);
+      break;
+  }
+}
+
+function id(x) { return document.getElementById(x); }
+</script>
+</body>
+</html>

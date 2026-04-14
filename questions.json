@@ -1,0 +1,47 @@
+[
+  {
+    "text": "新郎叫什麼名字？",
+    "options": ["Kai", "Kevin", "Kyle", "Kent"],
+    "correct": 0,
+    "time_limit": 20,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "text": "新娘叫什麼名字？",
+    "options": ["Bella", "Bella Wu", "Ellen", "以上皆是（就是 Bella 啦）"],
+    "correct": 3,
+    "time_limit": 20,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "text": "Kai 和 Bella 是怎麼認識的？",
+    "options": ["朋友介紹", "在大學校園", "交友軟體配對", "在超商排隊"],
+    "correct": 0,
+    "time_limit": 25,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "text": "婚後誰比較容易黏人？",
+    "options": ["新郎（離不開Bella）", "新娘（需要安全感）", "兩個都超黏", "各滑各的手機"],
+    "correct": 0,
+    "time_limit": 20,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "text": "婚後家裡誰掌管財政？",
+    "options": ["新郎（男人當家）", "新娘（女人最會理財）", "各存各的（AA制）", "問這個很危險"],
+    "correct": 1,
+    "time_limit": 20,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  }
+]

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kai & Bella 婚禮問答</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── 畫面切換 ── */
+  .screen { display: none; width: 100%; height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ══════════════════════════════
+     LOBBY
+  ══════════════════════════════ */
+  #screen-lobby {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 50%, #533483 100%);
+    gap: 30px;
+  }
+  .lobby-title {
+    font-size: 3.5vw;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg, #f8c8d4, #fde8b0, #f8c8d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+  }
+  .lobby-subtitle {
+    font-size: 1.8vw;
+    color: #ccc;
+    text-align: center;
+  }
+  .join-instruction {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 30px 60px;
+    text-align: center;
+  }
+  .join-instruction .url {
+    font-size: 2.5vw;
+    font-weight: 700;
+    color: #fde8b0;
+    letter-spacing: 2px;
+  }
+  .join-instruction .hint {
+    font-size: 1.3vw;
+    color: #aaa;
+    margin-top: 8px;
+  }
+  #lobby-player-count {
+    font-size: 2vw;
+    color: #8be9fd;
+  }
+  #lobby-player-count span {
+    font-size: 3.5vw;
+    font-weight: 900;
+    color: #50fa7b;
+  }
+
+  /* ══════════════════════════════
+     QUESTION
+  ══════════════════════════════ */
+  #screen-question {
+    background: linear-gradient(180deg, #16213e 0%, #0f3460 100%);
+  }
+  .question-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    background: rgba(0,0,0,0.3);
+  }
+  .q-progress {
+    font-size: 1.5vw;
+    color: #aaa;
+  }
+  .q-progress strong { color: #fde8b0; }
+
+  /* 倒數圓圈 */
+  .timer-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+  .timer-svg {
+    transform: rotate(-90deg);
+    width: 80px;
+    height: 80px;
+  }
+  .timer-track { fill: none; stroke: rgba(255,255,255,0.15); stroke-width: 8; }
+  .timer-bar   { fill: none; stroke: #50fa7b; stroke-width: 8;
+                 stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+  .timer-text  { position: absolute; inset: 0; display: flex; align-items: center;
+                 justify-content: center; font-size: 1.8vw; font-weight: 900; }
+
+  .q-answered { font-size: 1.3vw; color: #8be9fd; }
+
+  /* 題目本體 */
+  .question-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 60px;
+    gap: 16px;
+  }
+  .question-image {
+    max-height: 28vh;
+    max-width: 80%;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .question-text {
+    font-size: 2.8vw;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+
+  /* 選項 */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 0 40px 20px;
+    width: 100%;
+  }
+  .option-box {
+    border-radius: 16px;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 2vw;
+    font-weight: 600;
+    transition: transform 0.2s;
+  }
+  .option-box.A { background: #e21b3c; }
+  .option-box.B { background: #1368ce; }
+  .option-box.C { background: #d89e00; }
+  .option-box.D { background: #26890c; }
+  .option-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5vw;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .option-image {
+    width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  /* ══════════════════════════════
+     REVEAL
+  ══════════════════════════════ */
+  #screen-reveal {
+    background: #16213e;
+    align-items: stretch;
+  }
+  .reveal-top {
+    padding: 24px 60px;
+    background: rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .reveal-correct-label {
+    font-size: 1.5vw;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+  .reveal-correct-text {
+    font-size: 3vw;
+    font-weight: 900;
+    color: #50fa7b;
+  }
+  .reveal-body {
+    flex: 1;
+    display: flex;
+    gap: 40px;
+    padding: 30px 60px;
+  }
+
+  /* 答案分布 */
+  .distribution {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+  }
+  .dist-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .dist-label {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.3vw;
+    flex-shrink: 0;
+  }
+  .dist-label.A { background: #e21b3c; }
+  .dist-label.B { background: #1368ce; }
+  .dist-label.C { background: #d89e00; }
+  .dist-label.D { background: #26890c; }
+  .dist-label.correct-mark {
+    outline: 4px solid #50fa7b;
+    outline-offset: 2px;
+  }
+  .dist-bar-wrap {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    height: 44px;
+    overflow: hidden;
+    position: relative;
+  }
+  .dist-bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    font-weight: 700;
+    font-size: 1.2vw;
+    min-width: 50px;
+  }
+  .dist-bar.A { background: #e21b3c; }
+  .dist-bar.B { background: #1368ce; }
+  .dist-bar.C { background: #d89e00; }
+  .dist-bar.D { background: #26890c; }
+  .dist-count {
+    width: 48px;
+    text-align: right;
+    font-size: 1.4vw;
+    font-weight: 700;
+  }
+
+  /* 揭曉媒體 */
+  .reveal-media {
+    width: 40%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .reveal-media img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+    object-fit: contain;
+  }
+  .reveal-media video {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+  }
+
+  /* ══════════════════════════════
+     LEADERBOARD
+  ══════════════════════════════ */
+  #screen-leaderboard {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  .lb-title {
+    font-size: 2.5vw;
+    font-weight: 900;
+    color: #fde8b0;
+    letter-spacing: 4px;
+  }
+  .lb-list {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 28px;
+    border-radius: 16px;
+    animation: slideIn 0.4s ease both;
+  }
+  .lb-row:nth-child(1) { animation-delay: 0.1s; background: linear-gradient(90deg, #b8860b, #ffd700); color: #1a1a2e; }
+  .lb-row:nth-child(2) { animation-delay: 0.2s; background: linear-gradient(90deg, #778899, #c0c0c0); color: #1a1a2e; }
+  .lb-row:nth-child(3) { animation-delay: 0.3s; background: linear-gradient(90deg, #8b4513, #cd7f32); color: #fff; }
+  .lb-row:nth-child(n+4) { animation-delay: 0.4s; background: rgba(255,255,255,0.1); }
+  .lb-rank { font-size: 2.5vw; font-weight: 900; width: 60px; text-align: center; }
+  .lb-rank.top1::before { content: '🥇'; }
+  .lb-rank.top2::before { content: '🥈'; }
+  .lb-rank.top3::before { content: '🥉'; }
+  .lb-name { flex: 1; font-size: 2vw; font-weight: 700; }
+  .lb-score { font-size: 2vw; font-weight: 900; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ══════════════════════════════
+     FINISHED
+  ══════════════════════════════ */
+  #screen-finish {
+    background: linear-gradient(135deg, #0f3460 0%, #533483 100%);
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+  }
+  .finish-title {
+    font-size: 4vw;
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(90deg, #f8c8d4, #fde8b0, #f8c8d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .finish-hearts {
+    font-size: 3vw;
+    letter-spacing: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* ══════════════════════════════
+     通用
+  ══════════════════════════════ */
+  .badge-answered {
+    background: rgba(80, 250, 123, 0.2);
+    border: 1px solid #50fa7b;
+    color: #50fa7b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 1vw;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOBBY -->
+<div id="screen-lobby" class="screen active">
+  <div class="lobby-title">💍 Kai & Bella 婚禮問答</div>
+  <div class="lobby-subtitle">掃描 QR code 或輸入網址加入遊戲</div>
+  <div class="join-instruction">
+    <div class="url" id="join-url">載入中...</div>
+    <div class="hint">用手機瀏覽器開啟，輸入暱稱即可加入</div>
+  </div>
+  <div id="lobby-player-count">已加入 <span id="player-count">0</span> 位賓客</div>
+</div>
+
+<!-- QUESTION -->
+<div id="screen-question" class="screen">
+  <div class="question-header">
+    <div class="q-progress">第 <strong id="q-current">1</strong> 題 / 共 <strong id="q-total">10</strong> 題</div>
+    <div class="timer-wrapper">
+      <svg class="timer-svg" viewBox="0 0 80 80">
+        <circle class="timer-track" cx="40" cy="40" r="32"/>
+        <circle class="timer-bar" id="timer-bar" cx="40" cy="40" r="32"
+          stroke-dasharray="201" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-text" id="timer-text">20</div>
+    </div>
+    <div class="q-answered" id="q-answered">0 人已答</div>
+  </div>
+  <div class="question-body">
+    <img id="q-image" class="question-image" style="display:none" src="" alt="">
+    <div id="q-text" class="question-text">題目載入中...</div>
+  </div>
+  <div class="options-grid" id="options-grid"></div>
+</div>
+
+<!-- REVEAL -->
+<div id="screen-reveal" class="screen">
+  <div class="reveal-top">
+    <div class="reveal-correct-label">✅ 正確答案</div>
+    <div class="reveal-correct-text" id="reveal-answer-text"></div>
+  </div>
+  <div class="reveal-body">
+    <div class="distribution" id="distribution"></div>
+    <div class="reveal-media" id="reveal-media"></div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="screen-leaderboard" class="screen">
+  <div class="lb-title">🏆 目前排行榜</div>
+  <div class="lb-list" id="lb-list"></div>
+</div>
+
+<!-- FINISHED -->
+<div id="screen-finish" class="screen">
+  <div class="finish-hearts">💒 🎊 💒</div>
+  <div class="finish-title">恭喜 Kai & Bella！</div>
+  <div class="lb-list" id="final-lb-list" style="width:65%"></div>
+  <div class="finish-hearts">❤️ 祝百年好合 ❤️</div>
+</div>
+
+<script>
+const WS_URL = `ws://${location.host}/ws`;
+const CIRCUMFERENCE = 2 * Math.PI * 32; // ≈ 201
+
+let ws, currentTimeLimit = 20, timerInterval = null;
+let questionStartTime = null;
+
+// ── 音效 (Web Audio API) ──
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+function ensureAudio() {
+  if (!actx) actx = new AudioCtx();
+}
+function playTone(freq, dur, type='sine', vol=0.3) {
+  ensureAudio();
+  const osc = actx.createOscillator();
+  const gain = actx.createGain();
+  osc.connect(gain); gain.connect(actx.destination);
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, actx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+  osc.start(); osc.stop(actx.currentTime + dur);
+}
+function sfxTick()    { playTone(440, 0.08, 'square', 0.15); }
+function sfxCorrect() {
+  [523, 659, 784, 1047].forEach((f,i) => setTimeout(() => playTone(f, 0.18, 'sine', 0.4), i*90));
+}
+function sfxWrong()   { playTone(180, 0.4, 'sawtooth', 0.3); }
+function sfxReveal()  {
+  [200, 300, 400, 500, 600].forEach((f,i) => setTimeout(() => playTone(f, 0.12, 'sine', 0.25), i*60));
+}
+function sfxLeaderboard() {
+  [523,523,659,523,784,740].forEach((f,i) => setTimeout(() => playTone(f, 0.2, 'sine', 0.35), i*120));
+}
+function sfxCountdownUrgent() { playTone(880, 0.12, 'square', 0.25); }
+
+// ── 畫面切換 ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ── 倒數計時 ──
+function startTimer(timeLimit, remaining) {
+  clearInterval(timerInterval);
+  const bar = document.getElementById('timer-bar');
+  const txt = document.getElementById('timer-text');
+  let t = remaining !== undefined ? remaining : timeLimit;
+  const total = timeLimit;
+
+  function update() {
+    const pct = t / total;
+    bar.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
+    bar.style.stroke = t > total * 0.4 ? '#50fa7b' : t > total * 0.2 ? '#ffd700' : '#ff5555';
+    txt.textContent = Math.ceil(t);
+    txt.style.color = t <= 5 ? '#ff5555' : '#fff';
+    if (t <= 5 && t > 0) sfxTick();
+    if (t <= 0) {
+      clearInterval(timerInterval);
+      bar.style.strokeDashoffset = CIRCUMFERENCE;
+      txt.textContent = '0';
+    }
+    t = Math.max(0, t - 1);
+  }
+  update();
+  timerInterval = setInterval(update, 1000);
+}
+
+// ── 建立選項 ──
+const OPTION_LABELS = ['A','B','C','D'];
+const OPTION_COLORS = ['A','B','C','D'];
+
+function buildOptions(options, optionType, disabled=false) {
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  options.forEach((opt, i) => {
+    const box = document.createElement('div');
+    box.className = `option-box ${OPTION_LABELS[i]}`;
+    box.id = `opt-${i}`;
+    const icon = document.createElement('div');
+    icon.className = 'option-icon';
+    icon.textContent = OPTION_LABELS[i];
+    box.appendChild(icon);
+    if (optionType === 'image') {
+      const img = document.createElement('img');
+      img.src = opt; img.className = 'option-image'; img.alt = OPTION_LABELS[i];
+      box.appendChild(img);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = opt;
+      box.appendChild(span);
+    }
+    grid.appendChild(box);
+  });
+}
+
+// ── 答案分布 ──
+function buildDistribution(distribution, correct, options, optionType) {
+  const container = document.getElementById('distribution');
+  container.innerHTML = '';
+  const max = Math.max(...distribution, 1);
+  distribution.forEach((count, i) => {
+    const row = document.createElement('div');
+    row.className = 'dist-row';
+    const label = document.createElement('div');
+    label.className = `dist-label ${OPTION_LABELS[i]}${i===correct ? ' correct-mark' : ''}`;
+    label.textContent = OPTION_LABELS[i];
+    const barWrap = document.createElement('div');
+    barWrap.className = 'dist-bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = `dist-bar ${OPTION_LABELS[i]}`;
+    bar.style.width = '0%';
+    bar.textContent = count > 0 ? count + '人' : '';
+    barWrap.appendChild(bar);
+    const cnt = document.createElement('div');
+    cnt.className = 'dist-count';
+    cnt.textContent = count;
+    row.appendChild(label); row.appendChild(barWrap); row.appendChild(cnt);
+    container.appendChild(row);
+    setTimeout(() => { bar.style.width = (count / max * 100) + '%'; }, 100 + i * 80);
+  });
+}
+
+// ── 排行榜 ──
+function buildLeaderboard(list, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  list.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    const rankEl = document.createElement('div');
+    rankEl.className = `lb-rank ${i===0?'top1':i===1?'top2':i===2?'top3':''}`;
+    if (i >= 3) rankEl.textContent = item.rank;
+    const nameEl = document.createElement('div');
+    nameEl.className = 'lb-name';
+    nameEl.textContent = item.nickname;
+    const scoreEl = document.createElement('div');
+    scoreEl.className = 'lb-score';
+    scoreEl.textContent = item.score.toLocaleString() + ' 分';
+    row.appendChild(rankEl); row.appendChild(nameEl); row.appendChild(scoreEl);
+    container.appendChild(row);
+  });
+}
+
+// ── 揭曉媒體 ──
+function showRevealMedia(media) {
+  const container = document.getElementById('reveal-media');
+  container.innerHTML = '';
+  if (!media) return;
+  if (media.type === 'image') {
+    const img = document.createElement('img');
+    img.src = media.url; img.alt = '揭曉圖片';
+    container.appendChild(img);
+  } else if (media.type === 'video') {
+    const video = document.createElement('video');
+    video.src = media.url; video.autoplay = true; video.controls = false;
+    video.loop = false; video.muted = false;
+    container.appendChild(video);
+    video.play().catch(() => {});
+  }
+}
+
+// ── WebSocket 訊息處理 ──
+function handleMessage(data) {
+  switch(data.type) {
+
+    case 'state_sync':
+      document.getElementById('player-count').textContent = data.player_count;
+      document.getElementById('join-url').textContent = `${location.hostname}:${location.port}/play`;
+      showScreen('lobby');
+      break;
+
+    case 'player_count':
+      document.getElementById('player-count').textContent = data.count;
+      break;
+
+    case 'question_start':
+      clearInterval(timerInterval);
+      showScreen('question');
+      document.getElementById('q-current').textContent = data.index + 1;
+      document.getElementById('q-total').textContent = data.total;
+      document.getElementById('q-answered').textContent = '0 人已答';
+      currentTimeLimit = data.time_limit;
+      questionStartTime = Date.now();
+
+      const imgEl = document.getElementById('q-image');
+      if (data.image) {
+        imgEl.src = data.image; imgEl.style.display = 'block';
+      } else { imgEl.style.display = 'none'; }
+
+      document.getElementById('q-text').textContent = data.text;
+      buildOptions(data.options, data.option_type || 'text');
+      startTimer(data.time_limit, data.remaining);
+      break;
+
+    case 'answer_progress':
+      document.getElementById('q-answered').textContent = `${data.answered} / ${data.total} 人已答`;
+      break;
+
+    case 'answer_reveal':
+      clearInterval(timerInterval);
+      sfxReveal();
+      showScreen('reveal');
+      document.getElementById('reveal-answer-text').textContent =
+        `${OPTION_LABELS[data.correct]}. ${data.correct_text}`;
+
+      // 取得當前選項（需要從上次 question_start 存起來）
+      buildDistribution(data.distribution, data.correct, [], 'text');
+      showRevealMedia(data.reveal_media);
+      break;
+
+    case 'leaderboard':
+      sfxLeaderboard();
+      buildLeaderboard(data.leaderboard, 'lb-list');
+      document.getElementById('lb-title') &&
+        (document.getElementById('lb-title').textContent = data.is_final ? '🏆 最終排行榜' : '🏆 目前排行榜');
+      showScreen('leaderboard');
+      break;
+
+    case 'game_finish':
+      sfxLeaderboard();
+      buildLeaderboard(data.leaderboard, 'final-lb-list');
+      showScreen('finish');
+      break;
+
+    case 'game_reset':
+      document.getElementById('player-count').textContent = '0';
+      showScreen('lobby');
+      break;
+  }
+}
+
+// ── 連線 ──
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'display' }));
+    document.getElementById('join-url').textContent = `${location.hostname}:${location.port}/play`;
+  };
+  ws.onmessage = e => handleMessage(JSON.parse(e.data));
+  ws.onclose = () => setTimeout(connect, 2000);
+  ws.onerror = () => ws.close();
+}
+
+document.addEventListener('click', ensureAudio);
+connect();
+</script>
+</body>
+</html>
