@@ -4,93 +4,179 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>婚禮問答 — 加入遊戲</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg-deep:    #080810;
+    --bg-card:    #12121E;
+    --bg-glass:   rgba(255,255,255,0.04);
+    --border:     rgba(255,255,255,0.08);
+    --gold:       #C9A96E;
+    --gold-light: #F0D080;
+    --gold-glow:  rgba(201,169,110,0.25);
+    --text-main:  #F5F0E8;
+    --text-muted: #8888A8;
+    --opt-A:      #B84D6A;
+    --opt-B:      #3D6DB5;
+    --opt-C:      #B08030;
+    --opt-D:      #4A9460;
+    --correct:    #4ADE80;
+    --wrong:      #666;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
-    background: #1a1a2e;
-    color: #fff;
+    font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-main);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 24px 20px;
+    position: relative;
+    overflow-x: hidden;
   }
 
-  .screen { display: none; width: 100%; max-width: 480px; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; }
+  /* 背景光暈 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30vh; left: -20vw;
+    width: 80vw; height: 80vh;
+    background: radial-gradient(ellipse, rgba(201,169,110,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── 畫面切換 ── */
+  .screen { display: none; width: 100%; max-width: 480px; position: relative; z-index: 1; }
+  .screen.active {
+    display: flex; flex-direction: column; align-items: center;
+    animation: pageIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes pageIn {
+    from { opacity: 0; transform: scale(0.96) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
 
   /* ── JOIN ── */
-  #screen-join { gap: 24px; }
+  #screen-join { gap: 28px; }
+
+  .join-ring {
+    font-size: 3rem;
+    filter: drop-shadow(0 0 16px var(--gold-glow));
+  }
+
   .join-title {
-    font-size: 1.8rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
     font-weight: 900;
     text-align: center;
-    background: linear-gradient(90deg, #f8c8d4, #fde8b0);
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 60%, var(--gold) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    line-height: 1.3;
   }
-  .join-sub { font-size: 1rem; color: #aaa; text-align: center; }
+  .join-sub {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* 底線輸入框 */
   .input-field {
     width: 100%;
-    padding: 16px 20px;
+    padding: 14px 4px;
     font-size: 1.4rem;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 16px;
-    background: rgba(255,255,255,0.08);
-    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-main);
     text-align: center;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.25s;
   }
-  .input-field:focus { border-color: #8be9fd; }
-  .input-field::placeholder { color: #666; }
+  .input-field:focus { border-bottom-color: var(--gold); }
+  .input-field::placeholder { color: var(--text-muted); font-weight: 400; }
+
+  /* 金色漸層按鈕 */
   .btn-join {
     width: 100%;
     padding: 18px;
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
     border: none;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #f8c8d4, #fde8b0);
-    color: #1a1a2e;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    color: #0a0a14;
     cursor: pointer;
-    transition: transform 0.1s, opacity 0.2s;
+    transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 4px 24px var(--gold-glow);
+    letter-spacing: 0.5px;
   }
   .btn-join:active { transform: scale(0.97); }
-  .btn-join:disabled { opacity: 0.5; cursor: not-allowed; }
-  .error-msg { color: #ff5555; font-size: 0.9rem; }
+  .btn-join:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+  .error-msg { color: #ff6b6b; font-size: 0.9rem; font-weight: 600; min-height: 1.2em; }
 
   /* ── LOBBY ── */
-  #screen-lobby { gap: 20px; text-align: center; }
+  #screen-lobby { gap: 28px; text-align: center; }
+
   .lobby-nickname {
-    font-size: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
     font-weight: 900;
-    color: #50fa7b;
+    color: var(--gold-light);
+    text-shadow: 0 0 24px var(--gold-glow);
   }
   .lobby-wait {
-    font-size: 1.1rem;
-    color: #aaa;
-    line-height: 1.6;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-weight: 600;
   }
   .lobby-player-count {
-    font-size: 1rem;
-    color: #8be9fd;
+    font-size: 0.95rem;
+    color: var(--text-muted);
     padding: 8px 20px;
-    border: 1px solid #8be9fd;
+    border: 1px solid var(--border);
     border-radius: 20px;
+    background: var(--bg-glass);
+    font-weight: 600;
   }
-  .pulse-dot {
-    display: inline-block;
-    width: 12px; height: 12px;
-    background: #50fa7b;
+
+  /* 3-ring pulse in gold */
+  .pulse-rings {
+    position: relative;
+    width: 60px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pulse-rings::before,
+  .pulse-rings::after,
+  .pulse-rings span {
+    content: '';
+    position: absolute;
+    border: 2px solid var(--gold);
     border-radius: 50%;
-    animation: pulseDot 1.2s ease-in-out infinite;
+    animation: ringPulse 2s ease-out infinite;
+    opacity: 0;
   }
-  @keyframes pulseDot {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.5; }
+  .pulse-rings::before { width: 20px; height: 20px; animation-delay: 0s; }
+  .pulse-rings span    { width: 36px; height: 36px; animation-delay: 0.5s; display: block; position: absolute; border: 2px solid var(--gold); border-radius: 50%; }
+  .pulse-rings::after  { width: 52px; height: 52px; animation-delay: 1s; }
+  .pulse-core {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 8px var(--gold-glow);
+    position: relative; z-index: 1;
+  }
+  @keyframes ringPulse {
+    0%   { transform: scale(0.6); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
   }
 
   /* ── QUESTION ── */
@@ -101,129 +187,183 @@
     justify-content: space-between;
     align-items: center;
     font-size: 0.9rem;
-    color: #aaa;
+    color: var(--text-muted);
+    font-weight: 700;
   }
   .q-timer {
-    font-size: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
     font-weight: 900;
-    color: #50fa7b;
+    color: var(--correct);
     transition: color 0.3s;
   }
   .q-text {
-    font-size: 1.15rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     text-align: center;
-    line-height: 1.5;
-    color: #fff;
+    line-height: 1.55;
+    color: var(--text-main);
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    width: 100%;
+    backdrop-filter: blur(6px);
   }
   .q-image {
     width: 100%;
     max-height: 200px;
     object-fit: contain;
     border-radius: 12px;
+    border: 1px solid var(--border);
   }
+
+  /* 2×2 grid options */
   .options-list {
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
   .opt-btn {
-    width: 100%;
-    padding: 18px 20px;
-    border: none;
-    border-radius: 16px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
+    padding: 16px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 14px;
-    transition: transform 0.1s, filter 0.2s;
+    gap: 10px;
+    transition: transform 0.12s, filter 0.2s, outline 0.15s, box-shadow 0.2s;
     text-align: left;
+    background: var(--bg-card);
+    position: relative;
+    overflow: hidden;
   }
+  /* left color strip */
+  .opt-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+    border-radius: 14px 0 0 14px;
+  }
+  .opt-btn.A::before { background: var(--opt-A); }
+  .opt-btn.B::before { background: var(--opt-B); }
+  .opt-btn.C::before { background: var(--opt-C); }
+  .opt-btn.D::before { background: var(--opt-D); }
+
   .opt-btn:active { transform: scale(0.97); }
-  .opt-btn:disabled { filter: brightness(0.5); cursor: not-allowed; }
-  .opt-btn.A { background: #e21b3c; }
-  .opt-btn.B { background: #1368ce; }
-  .opt-btn.C { background: #d89e00; }
-  .opt-btn.D { background: #26890c; }
-  .opt-btn.selected { filter: brightness(1.2); outline: 3px solid #fff; outline-offset: 2px; }
-  .opt-icon {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.25);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1rem; font-weight: 900;
-    flex-shrink: 0;
+  .opt-btn:disabled { filter: brightness(0.35) blur(0.5px); cursor: not-allowed; }
+  .opt-btn.selected {
+    transform: scale(0.97);
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+    box-shadow: 0 0 16px var(--gold-glow);
   }
+  .opt-btn:disabled:not(.selected) { filter: brightness(0.3) blur(1px); }
+
+  .opt-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 900; flex-shrink: 0; margin-left: 4px;
+  }
+  .opt-btn.A .opt-icon { color: var(--opt-A); }
+  .opt-btn.B .opt-icon { color: var(--opt-B); }
+  .opt-btn.C .opt-icon { color: var(--opt-C); }
+  .opt-btn.D .opt-icon { color: var(--opt-D); }
   .opt-img { width: 100%; max-height: 60px; object-fit: contain; border-radius: 8px; }
 
   /* ── WAITING ── */
-  #screen-waiting { gap: 20px; text-align: center; }
+  #screen-waiting { gap: 24px; text-align: center; }
   .waiting-icon { font-size: 4rem; animation: spin 2s linear infinite; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .waiting-text { font-size: 1.2rem; color: #aaa; }
-  .points-earned {
-    font-size: 2.5rem;
-    font-weight: 900;
-  }
-  .points-earned.correct { color: #50fa7b; }
-  .points-earned.wrong   { color: #ff5555; }
-  .total-score { font-size: 1rem; color: #8be9fd; }
+  .waiting-text { font-size: 1.1rem; color: var(--text-muted); font-weight: 600; }
+  .points-earned { font-size: 2.5rem; font-weight: 900; }
+  .points-earned.correct { color: var(--correct); }
+  .points-earned.wrong   { color: #ff6b6b; }
+  .total-score { font-size: 1rem; color: var(--text-muted); }
 
   /* ── RESULT ── */
   #screen-result { gap: 20px; text-align: center; }
   .result-icon { font-size: 5rem; }
-  .result-label { font-size: 1.5rem; font-weight: 700; }
-  .result-pts {
-    font-size: 3rem;
-    font-weight: 900;
+  .result-label { font-size: 1.5rem; font-weight: 800; }
+  .result-pts { font-size: 3rem; font-weight: 900; }
+  .result-pts.correct { color: var(--correct); text-shadow: 0 0 20px rgba(74,222,128,0.4); }
+  .result-pts.wrong   { color: #ff6b6b; }
+  .result-total { font-size: 1rem; color: var(--text-muted); font-weight: 600; }
+
+  /* Shake animation for wrong */
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-10px); }
+    40%     { transform: translateX(10px); }
+    60%     { transform: translateX(-8px); }
+    80%     { transform: translateX(8px); }
   }
-  .result-pts.correct { color: #50fa7b; }
-  .result-pts.wrong   { color: #ff5555; }
+  .shake { animation: shake 0.5s ease both; }
 
   /* ── LEADERBOARD ── */
   #screen-leaderboard { gap: 16px; }
-  .lb-title { font-size: 1.4rem; font-weight: 900; color: #fde8b0; }
-  .lb-my-rank {
-    font-size: 1.1rem;
-    color: #8be9fd;
-    text-align: center;
+  .lb-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 900;
+    color: var(--gold-light); letter-spacing: 2px;
+    text-shadow: 0 0 16px var(--gold-glow);
   }
-  .lb-rows { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .lb-my-rank {
+    font-size: 1rem;
+    color: var(--text-muted);
+    text-align: center;
+    font-weight: 700;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 18px;
+  }
+  .lb-rows { width: 100%; display: flex; flex-direction: column; gap: 8px; }
   .lb-row {
     display: flex; align-items: center; gap: 14px;
-    padding: 12px 18px; border-radius: 12px;
+    padding: 12px 16px; border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    animation: slideIn 0.35s ease both;
   }
-  .lb-row.rank-1 { background: linear-gradient(90deg, #b8860b, #ffd700); color: #1a1a2e; }
-  .lb-row.rank-2 { background: linear-gradient(90deg, #778899, #c0c0c0); color: #1a1a2e; }
-  .lb-row.rank-3 { background: linear-gradient(90deg, #8b4513, #cd7f32); }
-  .lb-row.rank-other { background: rgba(255,255,255,0.1); }
+  .lb-row:nth-child(1) { animation-delay: 0.05s; border-color: var(--gold); background: linear-gradient(90deg, rgba(201,169,110,0.2), rgba(240,208,128,0.1)); box-shadow: 0 0 16px var(--gold-glow); }
+  .lb-row:nth-child(2) { animation-delay: 0.12s; border-color: rgba(200,200,220,0.25); }
+  .lb-row:nth-child(3) { animation-delay: 0.19s; border-color: rgba(180,130,60,0.3); }
+  .lb-row:nth-child(n+4) { animation-delay: 0.26s; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
   .lb-rank-num { font-size: 1.4rem; font-weight: 900; width: 36px; text-align: center; }
-  .lb-name { flex: 1; font-size: 1rem; font-weight: 600; }
-  .lb-score { font-size: 1rem; font-weight: 700; }
+  .lb-name { flex: 1; font-size: 0.95rem; font-weight: 700; }
+  .lb-score { font-size: 0.95rem; font-weight: 800; color: var(--gold-light); }
+  .lb-row.rank-1 .lb-score { color: var(--gold-light); }
 
   /* ── FINISH ── */
   #screen-finish { gap: 20px; text-align: center; }
   .finish-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    background: linear-gradient(90deg, #f8c8d4, #fde8b0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 12px var(--gold-glow));
+    line-height: 1.3;
   }
 
-  .reconnect-msg { font-size: 0.9rem; color: #ff5555; margin-top: 10px; }
+  .reconnect-msg { font-size: 0.85rem; color: #ff6b6b; margin-top: 10px; font-weight: 600; }
 </style>
 </head>
 <body>
 
 <!-- JOIN -->
 <div id="screen-join" class="screen active">
-  <div style="font-size:2.5rem">💍</div>
-  <div class="join-title">Kai & Bella<br>婚禮問答</div>
+  <div class="join-ring">💍</div>
+  <div class="join-title">Kai &amp; Bella<br>婚禮問答</div>
   <div class="join-sub">輸入你的暱稱加入遊戲</div>
   <input type="text" id="nickname-input" class="input-field"
          placeholder="你的暱稱" maxlength="12" autocomplete="off">
@@ -233,10 +373,10 @@
 
 <!-- LOBBY -->
 <div id="screen-lobby" class="screen">
-  <div style="font-size:2.5rem">🎉</div>
+  <div class="pulse-rings"><span></span><div class="pulse-core"></div></div>
   <div class="lobby-nickname" id="lobby-nickname">玩家名稱</div>
   <div class="lobby-wait">
-    遊戲即將開始<br>請稍候 <span class="pulse-dot"></span>
+    遊戲即將開始，請稍候
   </div>
   <div class="lobby-player-count" id="lobby-count">已加入 0 位玩家</div>
 </div>
@@ -263,7 +403,7 @@
   <div id="result-icon" class="result-icon">🎉</div>
   <div id="result-label" class="result-label">答對了！</div>
   <div id="result-pts" class="result-pts correct">+850 分</div>
-  <div id="result-total" class="total-score">累積 850 分</div>
+  <div id="result-total" class="result-total">累積 850 分</div>
 </div>
 
 <!-- LEADERBOARD -->
@@ -276,7 +416,7 @@
 <!-- FINISH -->
 <div id="screen-finish" class="screen">
   <div style="font-size:3rem">🥂</div>
-  <div class="finish-title">遊戲結束！<br>恭喜 Kai & Bella</div>
+  <div class="finish-title">遊戲結束！<br>恭喜 Kai &amp; Bella</div>
   <div class="lb-rows" id="final-lb-rows" style="width:100%"></div>
 </div>
 
