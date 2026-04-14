@@ -263,7 +263,7 @@
 </div>
 
 <script>
-const WS_URL = `ws://${location.host}/ws`;
+const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/quiz/ws`;
 let ws, password = '';
 let players = {};
 

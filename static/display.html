@@ -431,7 +431,7 @@
 </div>
 
 <script>
-const WS_URL = `ws://${location.host}/ws`;
+const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/quiz/ws`;
 const CIRCUMFERENCE = 2 * Math.PI * 32; // ≈ 201
 
 let ws, currentTimeLimit = 20, timerInterval = null;
@@ -599,7 +599,7 @@ function handleMessage(data) {
 
     case 'state_sync':
       document.getElementById('player-count').textContent = data.player_count;
-      document.getElementById('join-url').textContent = `${location.hostname}:${location.port}/play`;
+      document.getElementById('join-url').textContent = `${location.hostname}/quiz/play`;
       showScreen('lobby');
       break;
 
@@ -668,7 +668,7 @@ function connect() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
     ws.send(JSON.stringify({ type: 'display' }));
-    document.getElementById('join-url').textContent = `${location.hostname}:${location.port}/play`;
+    document.getElementById('join-url').textContent = `${location.hostname}/quiz/play`;
   };
   ws.onmessage = e => handleMessage(JSON.parse(e.data));
   ws.onclose = () => setTimeout(connect, 2000);
