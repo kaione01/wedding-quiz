@@ -93,13 +93,10 @@
     background: var(--bg-glass);
     border: 1px solid var(--gold);
     border-radius: 24px;
-    padding: 32px 60px;
-    text-align: center;
+    padding: 24px;
     backdrop-filter: blur(12px);
     box-shadow: 0 0 40px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.06);
-    display: flex;
-    align-items: center;
-    gap: 48px;
+    display: inline-flex;
   }
   .join-qr-wrap {
     flex-shrink: 0;
@@ -115,20 +112,6 @@
     background: #fff;
     display: block;
     box-shadow: 0 0 20px var(--gold-glow);
-  }
-  .join-text-wrap {
-    text-align: left;
-  }
-  .join-instruction .url {
-    font-size: 2vw;
-    font-weight: 800;
-    color: var(--gold-light);
-    letter-spacing: 2px;
-  }
-  .join-instruction .hint {
-    font-size: 1.1vw;
-    color: var(--text-muted);
-    margin-top: 10px;
   }
   #lobby-player-count {
     font-size: 1.8vw;
@@ -424,10 +407,7 @@
     <div class="join-qr-wrap">
       <img id="join-qr" src="" alt="QR Code">
     </div>
-    <div class="join-text-wrap">
-      <div class="url" id="join-url">載入中...</div>
-      <div class="hint">📱 手機掃 QR code 或輸入網址加入</div>
-    </div>
+    <div id="join-url" style="display:none"></div>
   </div>
   <div id="lobby-player-count">已加入 <span id="player-count">0</span> 位賓客</div>
 </div>
