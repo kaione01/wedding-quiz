@@ -159,7 +159,7 @@ async def _send_question():
     if game.timer_task and not game.timer_task.done():
         game.timer_task.cancel()
 
-    time_limit = q.get("time_limit", 20)
+    time_limit = q.get("time_limit", 10)
 
     # 給 display/host 完整資訊
     await game.broadcast_displays_hosts({
@@ -405,11 +405,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             "answered": len(game.answers),
                             "total": len(game.players),
                         })
-                        # 所有人都答了就自動揭曉
-                        if len(game.answers) >= len(game.players) and len(game.players) > 0:
-                            if game.timer_task and not game.timer_task.done():
-                                game.timer_task.cancel()
-                            await reveal_answer()
+                        # 所有人都答了也繼續等計時，由 MC 或 timer 控制揭曉
 
             # Host 指令
             elif conn_type == "host":

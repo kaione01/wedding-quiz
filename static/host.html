@@ -106,8 +106,7 @@
   .ctrl-btn:disabled { filter: brightness(0.4); cursor: not-allowed; }
   .btn-start    { background: #50fa7b; color: #111; }
   .btn-reveal   { background: #ffd700; color: #111; }
-  .btn-lb       { background: #8b5cf6; }
-  .btn-next     { background: #1368ce; }
+  .btn-continue { background: #8b5cf6; }
   .btn-reset    { background: #e21b3c; margin-top: 10px; font-size: 0.95rem; }
   .btn-reload   { background: #444; font-size: 0.9rem; }
 
@@ -242,9 +241,8 @@
       <!-- 主要控制按鈕 -->
       <div class="section-title">遊戲控制</div>
       <button id="btn-start"  class="ctrl-btn btn-start"  onclick="sendCmd('start_game')">▶ 開始遊戲</button>
-      <button id="btn-reveal" class="ctrl-btn btn-reveal"  onclick="sendCmd('reveal_answer')" disabled>📊 公佈答案</button>
-      <button id="btn-lb"     class="ctrl-btn btn-lb"      onclick="sendCmd('show_leaderboard')" disabled>🏆 顯示排行榜</button>
-      <button id="btn-next"   class="ctrl-btn btn-next"    onclick="sendCmd('next_question')" disabled>⏭ 下一題</button>
+      <button id="btn-reveal"   class="ctrl-btn btn-reveal"   onclick="sendCmd('reveal_answer')" disabled>📊 公佈答案</button>
+      <button id="btn-continue" class="ctrl-btn btn-continue" onclick="doContinue()" disabled>🏆 排行榜 &amp; 下一題</button>
 
       <button class="ctrl-btn btn-reload" onclick="sendCmd('reload_questions')">🔄 重新載入題目</button>
       <button class="ctrl-btn btn-reset"  onclick="confirmReset()">⚠️ 重置遊戲</button>
@@ -266,6 +264,7 @@
 const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/quiz/ws`;
 let ws, password = '';
 let players = {};
+let currentPhase = 'LOBBY';
 
 function doLogin() {
   password = document.getElementById('pw-input').value;
@@ -300,6 +299,14 @@ function confirmReset() {
   if (confirm('確定要重置遊戲嗎？所有玩家將被踢出。')) sendCmd('reset_game');
 }
 
+function doContinue() {
+  if (currentPhase === 'REVEAL') {
+    sendCmd('show_leaderboard');
+  } else if (currentPhase === 'LEADERBOARD') {
+    sendCmd('next_question');
+  }
+}
+
 function log(msg) {
   const el = document.getElementById('log-area');
   const time = new Date().toLocaleTimeString();
@@ -310,10 +317,11 @@ function log(msg) {
 // ── 按鈕狀態管理 ──
 function updateButtons(phase) {
   const b = id => document.getElementById(id);
-  b('btn-start').disabled  = phase !== 'LOBBY';
-  b('btn-reveal').disabled = phase !== 'QUESTION';
-  b('btn-lb').disabled     = phase !== 'REVEAL';
-  b('btn-next').disabled   = phase !== 'LEADERBOARD';
+  currentPhase = phase;
+  b('btn-start').disabled    = phase !== 'LOBBY';
+  b('btn-reveal').disabled   = phase !== 'QUESTION';
+  b('btn-continue').disabled = phase !== 'REVEAL' && phase !== 'LEADERBOARD';
+  b('btn-continue').textContent = phase === 'LEADERBOARD' ? '⏭ 下一題' : '🏆 排行榜 & 下一題';
   document.getElementById('answer-progress-section').style.display = phase === 'QUESTION' ? 'block' : 'none';
 
   const phaseMap = { LOBBY:'大廳', QUESTION:'作答中', REVEAL:'揭曉', LEADERBOARD:'排行榜', FINISHED:'結束' };
