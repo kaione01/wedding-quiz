@@ -2,10 +2,10 @@
   {
     "text": "今天新郎是？",
     "options": [
-      "/static/uploads/Q1_2.webp",
-      "/static/uploads/Q1_A.jpg",
-      "/static/uploads/Q1_1.jpg",
-      "/static/uploads/Q1_3.jpeg"
+      "/quiz/static/uploads/Q1_2.webp",
+      "/quiz/static/uploads/Q1_A.jpg",
+      "/quiz/static/uploads/Q1_1.jpg",
+      "/quiz/static/uploads/Q1_3.jpeg"
     ],
     "correct": 1,
     "time_limit": 10,
@@ -16,10 +16,10 @@
   {
     "text": "今天新娘是？",
     "options": [
-      "/static/uploads/Q2_1.png",
-      "/static/uploads/Q2_3.png",
-      "/static/uploads/Q2_A.png",
-      "/static/uploads/Q2_2.png"
+      "/quiz/static/uploads/Q2_1.png",
+      "/quiz/static/uploads/Q2_3.png",
+      "/quiz/static/uploads/Q2_A.png",
+      "/quiz/static/uploads/Q2_2.png"
     ],
     "correct": 2,
     "time_limit": 10,
