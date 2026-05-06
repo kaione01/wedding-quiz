@@ -398,59 +398,91 @@
   /* ══════════════════════════════
      REVEAL
   ══════════════════════════════ */
-  #screen-reveal { background: var(--bg-deep); align-items: stretch; }
-  .reveal-top {
-    padding: 24px 60px;
-    background: rgba(201,169,110,0.06);
-    border-bottom: 1px solid rgba(201,169,110,0.2);
-    text-align: center;
+  #screen-reveal {
+    background: var(--bg-deep);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  /* 頂部標題列 */
+  .reveal-header {
+    display: flex; align-items: center; gap: 20px;
+    padding: 14px 48px;
+    background: rgba(74,222,128,0.06);
+    border-bottom: 1px solid rgba(74,222,128,0.2);
+    flex-shrink: 0;
   }
   .reveal-correct-label {
-    font-size: 1.3vw; color: var(--text-muted); margin-bottom: 6px;
-    font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+    font-size: 1.3vw; color: var(--correct); font-weight: 700;
+    letter-spacing: 2px; flex-shrink: 0;
   }
   .reveal-correct-text {
     font-family: 'Playfair Display', serif;
-    font-size: 3vw; font-weight: 900;
+    font-size: 2.4vw; font-weight: 900;
     color: var(--correct);
-    text-shadow: 0 0 24px rgba(74,222,128,0.4);
+    text-shadow: 0 0 24px rgba(74,222,128,0.35);
   }
-  .reveal-body { flex: 1; display: flex; gap: 40px; padding: 28px 60px; }
-
-  .distribution { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
-  .dist-row { display: flex; align-items: center; gap: 16px; }
-  .dist-label {
-    width: 44px; height: 44px; border-radius: 50%;
+  /* 中央大圖 / 大文字區 */
+  .reveal-main {
+    flex: 1 1 0%; min-height: 0;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1.2vw; flex-shrink: 0;
+    padding: 16px 48px;
+    overflow: hidden;
+  }
+  .reveal-main img, .reveal-main video {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    border-radius: 20px;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.6);
+    animation: revealPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .reveal-main-text {
+    font-family: 'Playfair Display', 'Noto Serif TC', serif;
+    font-size: clamp(2rem, 6vw, 8rem);
+    font-weight: 900; color: var(--correct);
+    text-align: center; line-height: 1.3;
+    text-shadow: 0 0 40px rgba(74,222,128,0.4);
+    animation: revealPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes revealPop {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  /* 底部答題分布條 */
+  .reveal-dist-strip {
+    display: flex; gap: 8px;
+    padding: 10px 48px 14px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .dist-row {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .dist-label {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1vw; flex-shrink: 0;
     background: var(--bg-card);
   }
   .dist-label.A { color: var(--opt-A); border: 2px solid var(--opt-A); }
   .dist-label.B { color: var(--opt-B); border: 2px solid var(--opt-B); }
   .dist-label.C { color: var(--opt-C); border: 2px solid var(--opt-C); }
   .dist-label.D { color: var(--opt-D); border: 2px solid var(--opt-D); }
-  .dist-label.correct-mark { box-shadow: 0 0 0 3px var(--correct), 0 0 16px rgba(74,222,128,0.4); }
+  .dist-label.correct-mark { box-shadow: 0 0 0 3px var(--correct), 0 0 12px rgba(74,222,128,0.4); }
   .dist-bar-wrap {
-    flex: 1; background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 8px; height: 44px; overflow: hidden; position: relative;
+    width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 6px; height: 32px; overflow: hidden;
   }
   .dist-bar {
-    height: 100%; border-radius: 8px; transition: width 1s ease;
+    height: 100%; border-radius: 6px; transition: width 1s ease;
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 12px; font-weight: 700; font-size: 1.1vw; min-width: 50px; opacity: 0.85;
+    padding-right: 8px; font-weight: 700; font-size: 1vw; min-width: 40px; opacity: 0.85;
   }
   .dist-bar.A { background: var(--opt-A); }
   .dist-bar.B { background: var(--opt-B); }
   .dist-bar.C { background: var(--opt-C); }
   .dist-bar.D { background: var(--opt-D); }
-  .dist-count { width: 48px; text-align: right; font-size: 1.3vw; font-weight: 800; color: var(--text-muted); }
-
-  .reveal-media { width: 40%; display: flex; align-items: center; justify-content: center; }
-  .reveal-media img {
-    max-width: 100%; max-height: 100%; border-radius: 16px;
-    object-fit: contain; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-  }
-  .reveal-media video { max-width: 100%; max-height: 100%; border-radius: 16px; }
+  .dist-count { font-size: 1.1vw; font-weight: 800; color: var(--text-muted); }
 
   /* ══════════════════════════════
      LEADERBOARD
@@ -601,14 +633,12 @@
 
 <!-- REVEAL -->
 <div id="screen-reveal" class="screen">
-  <div class="reveal-top">
-    <div class="reveal-correct-label">✅ 正確答案</div>
-    <div class="reveal-correct-text" id="reveal-answer-text"></div>
+  <div class="reveal-header">
+    <span class="reveal-correct-label">✅ 正確答案</span>
+    <span class="reveal-correct-text" id="reveal-answer-text"></span>
   </div>
-  <div class="reveal-body">
-    <div class="distribution" id="distribution"></div>
-    <div class="reveal-media" id="reveal-media"></div>
-  </div>
+  <div class="reveal-main" id="reveal-main"></div>
+  <div class="reveal-dist-strip" id="distribution"></div>
 </div>
 
 <!-- LEADERBOARD -->
@@ -768,8 +798,8 @@ function buildOptions(options, optionType, disabled=false) {
   });
 }
 
-// ── 答案分布 ──
-function buildDistribution(distribution, correct, options, optionType) {
+// ── 答案分布（橫條版，底部 strip） ──
+function buildDistribution(distribution, correct) {
   const container = document.getElementById('distribution');
   container.innerHTML = '';
   const max = Math.max(...distribution, 1);
@@ -795,6 +825,37 @@ function buildDistribution(distribution, correct, options, optionType) {
   });
 }
 
+// ── 揭曉主畫面（大圖/大文字）──
+function buildRevealMain(data) {
+  const main = document.getElementById('reveal-main');
+  main.innerHTML = '';
+
+  // 優先順序：reveal_media > 圖片選項答案 > 文字大字
+  if (data.reveal_media) {
+    if (data.reveal_media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = data.reveal_media.url; img.alt = '揭曉';
+      main.appendChild(img);
+    } else if (data.reveal_media.type === 'video') {
+      const video = document.createElement('video');
+      video.src = data.reveal_media.url;
+      video.autoplay = true; video.controls = false; video.loop = false; video.muted = false;
+      main.appendChild(video);
+      video.play().catch(() => {});
+    }
+  } else if (data.option_type === 'image' && currentOptions[data.correct]) {
+    const img = document.createElement('img');
+    img.src = currentOptions[data.correct]; img.alt = '正確答案';
+    main.appendChild(img);
+  } else {
+    // 文字大字
+    const div = document.createElement('div');
+    div.className = 'reveal-main-text';
+    div.textContent = `${OPTION_LABELS[data.correct]}. ${data.correct_text}`;
+    main.appendChild(div);
+  }
+}
+
 // ── 排行榜 ──
 function buildLeaderboard(list, containerId) {
   const container = document.getElementById(containerId);
@@ -814,24 +875,6 @@ function buildLeaderboard(list, containerId) {
     row.appendChild(rankEl); row.appendChild(nameEl); row.appendChild(scoreEl);
     container.appendChild(row);
   });
-}
-
-// ── 揭曉媒體 ──
-function showRevealMedia(media) {
-  const container = document.getElementById('reveal-media');
-  container.innerHTML = '';
-  if (!media) return;
-  if (media.type === 'image') {
-    const img = document.createElement('img');
-    img.src = media.url; img.alt = '揭曉圖片';
-    container.appendChild(img);
-  } else if (media.type === 'video') {
-    const video = document.createElement('video');
-    video.src = media.url; video.autoplay = true; video.controls = false;
-    video.loop = false; video.muted = false;
-    container.appendChild(video);
-    video.play().catch(() => {});
-  }
 }
 
 // ── WebSocket 訊息處理 ──
@@ -880,15 +923,15 @@ function handleMessage(data) {
       sfxReveal();
       showScreen('reveal');
       launchConfetti();
+      // 頂部標題：文字題才顯示文字，圖片題只顯示 ABCD 標籤
       const revealEl = document.getElementById('reveal-answer-text');
-      if (currentOptionType === 'image' && currentOptions[data.correct]) {
-        revealEl.innerHTML = `${OPTION_LABELS[data.correct]}. <img src="${currentOptions[data.correct]}" alt="答案" style="max-height:180px;max-width:340px;border-radius:12px;object-fit:cover;vertical-align:middle;margin-left:10px;">`;
+      if (currentOptionType === 'image') {
+        revealEl.textContent = OPTION_LABELS[data.correct];
       } else {
         revealEl.textContent = `${OPTION_LABELS[data.correct]}. ${data.correct_text}`;
       }
-
-      buildDistribution(data.distribution, data.correct, [], 'text');
-      showRevealMedia(data.reveal_media);
+      buildRevealMain(data);
+      buildDistribution(data.distribution, data.correct);
       break;
 
     case 'leaderboard':

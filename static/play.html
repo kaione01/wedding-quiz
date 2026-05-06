@@ -415,6 +415,111 @@
   .lb-score { font-size: 0.95rem; font-weight: 800; color: var(--gold-light); }
   .lb-row.rank-1 .lb-score { color: var(--gold-light); }
 
+  /* ── REVEAL (answer reveal phase) ── */
+  #screen-reveal {
+    padding: 0;
+    gap: 0;
+  }
+  body.reveal-active {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  body.reveal-active #screen-reveal {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reveal-top-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(74,222,128,0.12);
+    border-bottom: 1px solid rgba(74,222,128,0.2);
+  }
+  .reveal-top-label {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--correct);
+    letter-spacing: 1px;
+  }
+  .reveal-top-answer {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  .reveal-media-area {
+    flex: 1 1 0%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background: #0a0a18;
+    overflow: hidden;
+  }
+  .reveal-media-area img,
+  .reveal-media-area video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    animation: revealPopMobile 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes revealPopMobile {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .reveal-text-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold-light);
+    text-align: center;
+    line-height: 1.4;
+    text-shadow: 0 0 24px var(--gold-glow);
+    padding: 20px;
+    animation: revealPopMobile 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .reveal-personal-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+  }
+  .reveal-personal-icon { font-size: 2rem; }
+  .reveal-personal-info { flex: 1; }
+  .reveal-personal-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .reveal-personal-pts {
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  .reveal-personal-pts.correct { color: var(--correct); }
+  .reveal-personal-pts.wrong   { color: #ff6b6b; }
+  .reveal-personal-total {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: right;
+  }
+
   /* ── FINISH ── */
   #screen-finish { gap: 20px; text-align: center; }
   .finish-title {
@@ -469,6 +574,25 @@
   <div class="waiting-text">已送出，等待公佈答案</div>
 </div>
 
+<!-- REVEAL (answer announce phase) -->
+<div id="screen-reveal" class="screen">
+  <div class="reveal-top-bar">
+    <span class="reveal-top-label">✅ 正確答案</span>
+    <span class="reveal-top-answer" id="reveal-answer-label"></span>
+  </div>
+  <div class="reveal-media-area" id="reveal-media-area">
+    <!-- big image / text injected by JS -->
+  </div>
+  <div class="reveal-personal-bar">
+    <div class="reveal-personal-icon" id="reveal-p-icon">🎉</div>
+    <div class="reveal-personal-info">
+      <div class="reveal-personal-label" id="reveal-p-label">答對了！</div>
+      <div class="reveal-personal-pts correct" id="reveal-p-pts">+850 分</div>
+    </div>
+    <div class="reveal-personal-total" id="reveal-p-total">累積 850 分</div>
+  </div>
+</div>
+
 <!-- RESULT -->
 <div id="screen-result" class="screen">
   <div id="result-icon" class="result-icon">🎉</div>
@@ -495,10 +619,14 @@
 const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/quiz/ws`;
 let ws, myNickname = '', myScore = 0;
 const LABELS = ['A','B','C','D'];
+let currentOptions = [], currentOptionType = 'text';
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
+  // toggle full-bleed body classes
+  document.body.classList.toggle('image-question', id === 'question' && currentOptionType === 'image');
+  document.body.classList.toggle('reveal-active',  id === 'reveal');
 }
 
 // ── 音效 ──
@@ -599,13 +727,15 @@ function handleMsg(data) {
 
     case 'question_start':
       clearInterval(timerInterval);
+      currentOptions = data.options || [];
+      currentOptionType = data.option_type || 'text';
       showScreen('question');
       document.getElementById('q-progress').textContent = `第 ${data.index+1} / ${data.total} 題`;
       const imgEl = document.getElementById('q-img');
       if (data.image) { imgEl.src = data.image; imgEl.style.display = 'block'; }
       else { imgEl.style.display = 'none'; }
       document.getElementById('q-text').textContent = data.text;
-      buildOptions(data.options, data.option_type || 'text');
+      buildOptions(data.options, currentOptionType);
       startTimer(data.time_limit, data.remaining);
       break;
 
@@ -614,19 +744,63 @@ function handleMsg(data) {
       showScreen('waiting');
       break;
 
-    case 'personal_result':
+    case 'answer_reveal': {
       clearInterval(timerInterval);
-      const correct = data.correct;
-      const pts = data.points_earned;
+      const isCorrect = data.personal_correct;
+      const pts = data.points_earned || 0;
       myScore = data.total_score;
-      document.getElementById('result-icon').textContent = correct ? '🎉' : '😅';
-      document.getElementById('result-label').textContent = correct ? '答對了！' : (data.answered ? '答錯了...' : '沒有作答');
-      const ptsEl = document.getElementById('result-pts');
-      ptsEl.textContent = correct ? `+${pts} 分` : '+0 分';
-      ptsEl.className = `result-pts ${correct ? 'correct' : 'wrong'}`;
-      document.getElementById('result-total').textContent = `累積 ${myScore} 分`;
-      if (correct) sfxCorrect(); else sfxWrong();
-      showScreen('result');
+
+      // ── Top bar: correct answer label ──
+      const optType = data.option_type || 'text';
+      let ansLabel = '';
+      if (optType === 'image') {
+        ansLabel = LABELS[data.correct] || '';
+      } else {
+        ansLabel = data.correct_text || '';
+      }
+      document.getElementById('reveal-answer-label').textContent = ansLabel;
+
+      // ── Media area: big image or text ──
+      const mediaArea = document.getElementById('reveal-media-area');
+      mediaArea.innerHTML = '';
+      if (data.reveal_media) {
+        const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(data.reveal_media);
+        if (isVideo) {
+          const v = document.createElement('video');
+          v.src = data.reveal_media; v.autoplay = true; v.loop = true;
+          v.muted = false; v.playsInline = true; v.controls = false;
+          mediaArea.appendChild(v);
+        } else {
+          const img = document.createElement('img');
+          img.src = data.reveal_media; img.alt = '揭曉';
+          mediaArea.appendChild(img);
+        }
+      } else if (optType === 'image' && currentOptions[data.correct]) {
+        const img = document.createElement('img');
+        img.src = currentOptions[data.correct]; img.alt = '正確答案';
+        mediaArea.appendChild(img);
+      } else {
+        const div = document.createElement('div');
+        div.className = 'reveal-text-big';
+        div.textContent = data.correct_text || '';
+        mediaArea.appendChild(div);
+      }
+
+      // ── Bottom personal result bar ──
+      document.getElementById('reveal-p-icon').textContent  = isCorrect ? '🎉' : (data.answered ? '😅' : '😶');
+      document.getElementById('reveal-p-label').textContent = isCorrect ? '答對了！' : (data.answered ? '答錯了...' : '沒有作答');
+      const ptsEl2 = document.getElementById('reveal-p-pts');
+      ptsEl2.textContent = isCorrect ? `+${pts} 分` : '+0 分';
+      ptsEl2.className = `reveal-personal-pts ${isCorrect ? 'correct' : 'wrong'}`;
+      document.getElementById('reveal-p-total').textContent = `累積 ${myScore} 分`;
+
+      if (isCorrect) sfxCorrect(); else sfxWrong();
+      showScreen('reveal');
+      break;
+    }
+
+    case 'personal_result':
+      // legacy fallback — kept in case server sends it
       break;
 
     case 'leaderboard':
@@ -641,6 +815,7 @@ function handleMsg(data) {
 
     case 'game_reset':
       myScore = 0;
+      currentOptions = []; currentOptionType = 'text';
       document.getElementById('nickname-input').value = '';
       document.getElementById('btn-join').disabled = false;
       showScreen('join');
@@ -653,7 +828,6 @@ function buildOptions(options, type) {
   const list = document.getElementById('options-list');
   list.innerHTML = '';
   list.classList.toggle('image-mode', type === 'image');
-  document.body.classList.toggle('image-question', type === 'image');
   options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = `opt-btn ${LABELS[i]}`;

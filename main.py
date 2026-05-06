@@ -200,18 +200,20 @@ async def _send_question():
         "option_type": q.get("option_type", "text"),
     })
 
-    # 自動倒數計時
-    game.timer_task = asyncio.create_task(_auto_reveal(time_limit))
+    # 自動倒數計時（時間到只通知 host，不自動公佈答案）
+    game.timer_task = asyncio.create_task(_auto_timer_end(time_limit))
 
 
-async def _auto_reveal(time_limit: int):
+async def _auto_timer_end(time_limit: int):
     await asyncio.sleep(time_limit)
     if game.phase == "QUESTION":
-        await reveal_answer()
+        game.phase = "QUESTION_ENDED"
+        # 通知 host 計時結束，按鈕可以變成「公佈答案」
+        await game.broadcast_hosts({"type": "timer_ended"})
 
 
 async def reveal_answer():
-    if game.phase != "QUESTION":
+    if game.phase not in ("QUESTION", "QUESTION_ENDED"):
         return
 
     if game.timer_task and not game.timer_task.done():
@@ -219,7 +221,7 @@ async def reveal_answer():
 
     game.phase = "REVEAL"
     q = game.current_question
-    correct = game.shuffled_correct          # 使用洗牌後的正確 index
+    correct = game.shuffled_correct
     distribution = game.get_answer_distribution()
 
     # 計分
@@ -236,26 +238,34 @@ async def reveal_answer():
             game.players[conn_id]["last_points"] = 0
 
     leaderboard = game.get_leaderboard()
+    correct_text = game.shuffled_options[correct]
+    option_type  = q.get("option_type", "text")
 
     reveal_payload = {
         "type": "answer_reveal",
         "correct": correct,
-        "correct_text": game.shuffled_options[correct],
+        "correct_text": correct_text,
+        "option_type": option_type,
         "distribution": distribution,
-        "reveal_media": q.get("reveal_media"),  # {"type":"image"|"video", "url":"..."}
+        "reveal_media": q.get("reveal_media"),
         "leaderboard": leaderboard,
         "total_answered": len(game.answers),
         "total_players": len(game.players),
     }
+    # 大螢幕 + host 看到公佈畫面
     await game.broadcast_displays_hosts(reveal_payload)
 
-    # 通知每個玩家個人成績
+    # 玩家手機：個人成績 + 正確答案（讓手機也顯示答案大圖）
     for conn_id, p in game.players.items():
         answered = conn_id in game.answers
         correct_ans = game.answers.get(conn_id) == correct
         await game.send_to(p["ws"], {
-            "type": "personal_result",
-            "correct": correct_ans,
+            "type": "answer_reveal",
+            "correct": correct,
+            "correct_text": correct_text,
+            "option_type": option_type,
+            "reveal_media": q.get("reveal_media"),
+            "personal_correct": correct_ans,
             "points_earned": p.get("last_points", 0),
             "total_score": p["score"],
             "answered": answered,
@@ -263,7 +273,7 @@ async def reveal_answer():
 
 
 async def show_leaderboard():
-    if game.phase != "REVEAL":
+    if game.phase not in ("REVEAL",):
         return
     game.phase = "LEADERBOARD"
     await game.broadcast_all({

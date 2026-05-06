@@ -365,8 +365,7 @@
       <!-- 主要控制按鈕 -->
       <div class="section-title">遊戲控制</div>
       <button id="btn-start"    class="ctrl-btn btn-start"    onclick="sendCmd('start_game')">▶ 開始遊戲</button>
-      <button id="btn-reveal"   class="ctrl-btn btn-reveal"   onclick="sendCmd('reveal_answer')" disabled>📊 公佈答案</button>
-      <button id="btn-continue" class="ctrl-btn btn-continue" onclick="doContinue()" disabled>🏆 排行榜 &amp; 下一題</button>
+      <button id="btn-continue" class="ctrl-btn btn-continue" onclick="doContinue()" disabled>📢 公佈答案</button>
 
       <button class="ctrl-btn btn-reload" onclick="sendCmd('reload_questions')">🔄 重新載入題目</button>
       <button class="ctrl-btn btn-reset"  onclick="confirmReset()">⚠️ 重置遊戲</button>
@@ -424,7 +423,9 @@ function confirmReset() {
 }
 
 function doContinue() {
-  if (currentPhase === 'REVEAL') {
+  if (currentPhase === 'QUESTION_ENDED') {
+    sendCmd('reveal_answer');
+  } else if (currentPhase === 'REVEAL') {
     sendCmd('show_leaderboard');
   } else if (currentPhase === 'LEADERBOARD') {
     sendCmd('next_question');
@@ -442,14 +443,32 @@ function log(msg) {
 function updateButtons(phase) {
   const b = id => document.getElementById(id);
   currentPhase = phase;
-  b('btn-start').disabled    = phase !== 'LOBBY';
-  b('btn-reveal').disabled   = phase !== 'QUESTION';
-  b('btn-continue').disabled = phase !== 'REVEAL' && phase !== 'LEADERBOARD';
-  b('btn-continue').textContent = phase === 'LEADERBOARD' ? '⏭ 下一題' : '🏆 排行榜 & 下一題';
-  document.getElementById('answer-progress-section').style.display = phase === 'QUESTION' ? 'block' : 'none';
+  b('btn-start').disabled = phase !== 'LOBBY';
 
-  const phaseMap = { LOBBY:'大廳', QUESTION:'作答中', REVEAL:'揭曉', LEADERBOARD:'排行榜', FINISHED:'結束' };
-  const badgeMap = { LOBBY:'lobby', QUESTION:'question', REVEAL:'reveal', LEADERBOARD:'leaderboard', FINISHED:'finished' };
+  const btn = b('btn-continue');
+  if (phase === 'QUESTION_ENDED') {
+    btn.disabled = false;
+    btn.textContent = '📢 公佈答案';
+    btn.style.background = 'linear-gradient(135deg,#e55,#c33)';
+  } else if (phase === 'REVEAL') {
+    btn.disabled = false;
+    btn.textContent = '🏆 排行榜';
+    btn.style.background = '';
+  } else if (phase === 'LEADERBOARD') {
+    btn.disabled = false;
+    btn.textContent = '⏭ 下一題';
+    btn.style.background = '';
+  } else {
+    btn.disabled = true;
+    btn.textContent = '📢 公佈答案';
+    btn.style.background = '';
+  }
+
+  document.getElementById('answer-progress-section').style.display =
+    (phase === 'QUESTION' || phase === 'QUESTION_ENDED') ? 'block' : 'none';
+
+  const phaseMap = { LOBBY:'大廳', QUESTION:'作答中', QUESTION_ENDED:'等待公佈', REVEAL:'揭曉', LEADERBOARD:'排行榜', FINISHED:'結束' };
+  const badgeMap = { LOBBY:'lobby', QUESTION:'question', QUESTION_ENDED:'question', REVEAL:'reveal', LEADERBOARD:'leaderboard', FINISHED:'finished' };
   const badge = document.getElementById('phase-badge');
   badge.textContent = phaseMap[phase] || phase;
   badge.className = `status-badge ${badgeMap[phase] || ''}`;
@@ -534,7 +553,7 @@ function handleMsg(data) {
 
     case 'question_start':
       document.getElementById('info-q').textContent = data.index + 1;
-      updateButtons('QUESTION');
+      updateButtons(data.phase === 'QUESTION_ENDED' ? 'QUESTION_ENDED' : 'QUESTION');
       showQuestionPreview(data);
       document.getElementById('progress-bar').style.width = '0%';
       document.getElementById('progress-bar').textContent = '0%';
@@ -547,6 +566,11 @@ function handleMsg(data) {
       document.getElementById('progress-bar').style.width = pct + '%';
       document.getElementById('progress-bar').textContent = pct > 10 ? pct + '%' : '';
       document.getElementById('answered-text').textContent = `${data.answered} / ${data.total} 人已答`;
+      break;
+
+    case 'timer_ended':
+      updateButtons('QUESTION_ENDED');
+      log('⏰ 計時結束，可按「公佈答案」');
       break;
 
     case 'answer_reveal':
