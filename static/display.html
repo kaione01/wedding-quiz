@@ -126,6 +126,58 @@
     text-shadow: 0 0 20px var(--gold-glow);
   }
 
+  /* ── 獎品預告 ── */
+  .prize-banner {
+    background: var(--bg-glass);
+    border: 1px solid rgba(201,169,110,0.35);
+    border-radius: 20px;
+    padding: 18px 36px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 32px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 38vw;
+  }
+  .prize-banner-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3vw;
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .prize-list {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+  .prize-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    min-width: 10vw;
+  }
+  .prize-item:nth-child(1) { border-color: var(--gold); background: rgba(201,169,110,0.08); }
+  .prize-item:nth-child(2) { border-color: rgba(200,200,220,0.3); }
+  .prize-item:nth-child(3) { border-color: rgba(200,150,80,0.3); }
+  .prize-medal { font-size: 2vw; }
+  .prize-name {
+    font-size: 1.05vw;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .prize-item:nth-child(1) .prize-name { color: var(--gold-light); }
+
   /* ══════════════════════════════
      QUESTION
   ══════════════════════════════ */
@@ -408,6 +460,23 @@
       <img id="join-qr" src="" alt="QR Code">
     </div>
     <div id="join-url" style="display:none"></div>
+  </div>
+  <div class="prize-banner">
+    <div class="prize-banner-title">🎁 遊戲獎品預告</div>
+    <div class="prize-list">
+      <div class="prize-item">
+        <div class="prize-medal">🥇</div>
+        <div class="prize-name">夏慕尼<br>兩人餐券</div>
+      </div>
+      <div class="prize-item">
+        <div class="prize-medal">🥈</div>
+        <div class="prize-name">星巴克<br>兌換券 ×10</div>
+      </div>
+      <div class="prize-item">
+        <div class="prize-medal">🥉</div>
+        <div class="prize-name">威秀電影票<br>雙人券</div>
+      </div>
+    </div>
   </div>
   <div id="lobby-player-count">已加入 <span id="player-count">0</span> 位賓客</div>
 </div>
