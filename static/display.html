@@ -181,7 +181,7 @@
   /* ══════════════════════════════
      QUESTION
   ══════════════════════════════ */
-  #screen-question { background: var(--bg-deep); }
+  #screen-question { background: var(--bg-deep); overflow: hidden; }
 
   .question-progress-bar {
     height: 4px;
@@ -303,93 +303,95 @@
 
   .option-image { width: 100%; max-height: 80px; object-fit: contain; border-radius: 8px; }
 
-  /* ── 圖片選項模式：佔滿全螢幕 ── */
+  /* ── 圖片選項模式：四張圖永遠貼滿視窗，不溢出 ── */
   #screen-question.image-mode {
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
   }
-  /* 縮小 header */
+  /* Header 壓到最小 */
+  #screen-question.image-mode .question-progress-bar { height: 3px; }
   #screen-question.image-mode .question-header {
-    padding: 6px 20px;
+    padding: 4px 16px;
+    min-height: 0;
+    flex-shrink: 0;
   }
-  #screen-question.image-mode .timer-wrapper {
-    width: 56px;
-    height: 56px;
-  }
+  #screen-question.image-mode .timer-wrapper,
   #screen-question.image-mode .timer-svg {
-    width: 56px;
-    height: 56px;
+    width: 48px; height: 48px;
   }
-  #screen-question.image-mode .timer-text {
-    font-size: 1.5vw;
-  }
-  #screen-question.image-mode .q-progress {
-    font-size: 1.1vw;
-  }
-  #screen-question.image-mode .q-answered {
-    font-size: 1vw;
-  }
-  /* 題目文字區：壓縮到最小 */
+  #screen-question.image-mode .timer-text  { font-size: clamp(12px, 1.4vw, 22px); }
+  #screen-question.image-mode .q-progress  { font-size: clamp(11px, 1vw, 18px); }
+  #screen-question.image-mode .q-answered  { font-size: clamp(10px, 0.9vw, 16px); }
+
+  /* 題目文字：緊縮 */
   #screen-question.image-mode .question-body {
     flex: 0 0 auto;
-    padding: 4px 16px;
+    padding: 3px 12px;
+    min-height: 0;
   }
   #screen-question.image-mode .question-card {
-    padding: 10px 28px;
-    border-radius: 12px;
+    padding: 8px 24px;
+    border-radius: 10px;
     max-width: 100%;
   }
   #screen-question.image-mode .question-text {
-    font-size: 2vw;
+    font-size: clamp(14px, 2vw, 32px);
   }
-  /* 選項 grid：吃掉所有剩餘空間 */
+
+  /* 選項 grid：flex:1 + min-height:0 確保不超出 */
   #screen-question.image-mode .options-grid {
-    flex: 1 1 0;
+    flex: 1 1 0%;
     min-height: 0;
+    overflow: hidden;
+    display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    padding: 4px 6px 6px;
-    gap: 5px;
+    padding: 3px 4px 4px;
+    gap: 4px;
+    width: 100%;
+    flex-shrink: 1;
   }
-  /* 每個選項 box 完全填滿格子 */
+
+  /* 每個 box 必須不超出格子 */
   #screen-question.image-mode .option-box {
     padding: 0;
     overflow: hidden;
-    height: 100%;
     min-height: 0;
+    max-height: 100%;
     align-items: stretch;
-    border-radius: 10px;
+    border-radius: 8px;
     position: relative;
+    height: auto;
   }
   #screen-question.image-mode .option-box::before {
-    width: 7px;
-    z-index: 2;
-    border-radius: 10px 0 0 10px;
+    width: 6px; z-index: 2;
+    border-radius: 8px 0 0 8px;
   }
-  /* A/B/C/D 角標固定在左上角 */
+
+  /* A/B/C/D 角標 */
   #screen-question.image-mode .option-icon {
     position: absolute;
-    top: 10px;
-    left: 12px;
+    top: 8px; left: 10px;
     z-index: 3;
-    width: 38px;
-    height: 38px;
-    font-size: 1.3vw;
+    width: clamp(28px, 2.8vw, 44px);
+    height: clamp(28px, 2.8vw, 44px);
+    font-size: clamp(11px, 1.2vw, 20px);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.60);
     backdrop-filter: blur(4px);
   }
-  /* 圖片完全填滿 box */
+
+  /* 圖片：完全填滿 box，不溢出 */
   #screen-question.image-mode .option-image {
+    display: block;
     width: 100%;
     height: 100%;
-    max-height: none;
+    max-height: 100%;
     object-fit: cover;
     border-radius: 0;
-    display: block;
   }
 
   /* ══════════════════════════════
