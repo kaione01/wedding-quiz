@@ -303,6 +303,52 @@
 
   .option-image { width: 100%; max-height: 80px; object-fit: contain; border-radius: 8px; }
 
+  /* ── 圖片選項模式 ── */
+  #screen-question.image-mode .question-body {
+    flex: 0;
+    padding: 8px 40px;
+  }
+  #screen-question.image-mode .question-card {
+    padding: 16px 40px;
+  }
+  #screen-question.image-mode .question-text {
+    font-size: 2.2vw;
+  }
+  #screen-question.image-mode .options-grid {
+    flex: 1;
+    grid-template-rows: 1fr 1fr;
+    padding: 0 12px 12px;
+    gap: 8px;
+  }
+  #screen-question.image-mode .option-box {
+    padding: 0;
+    overflow: hidden;
+    justify-content: center;
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
+  }
+  #screen-question.image-mode .option-box::before {
+    width: 6px;
+    z-index: 2;
+  }
+  #screen-question.image-mode .option-icon {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    font-size: 1.4vw;
+  }
+  #screen-question.image-mode .option-image {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
   /* ══════════════════════════════
      REVEAL
   ══════════════════════════════ */
@@ -539,6 +585,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 32; // ≈ 201
 
 let ws, currentTimeLimit = 20, timerInterval = null;
 let questionStartTime = null;
+let currentOptionType = 'text', currentOptions = [];
 
 // ── 音效 (Web Audio API) ──
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -653,6 +700,7 @@ const OPTION_COLORS = ['A','B','C','D'];
 function buildOptions(options, optionType, disabled=false) {
   const grid = document.getElementById('options-grid');
   grid.innerHTML = '';
+  document.getElementById('screen-question').classList.toggle('image-mode', optionType === 'image');
   options.forEach((opt, i) => {
     const box = document.createElement('div');
     box.className = `option-box ${OPTION_LABELS[i]}`;
@@ -771,7 +819,9 @@ function handleMessage(data) {
       } else { imgEl.style.display = 'none'; }
 
       document.getElementById('q-text').textContent = data.text;
-      buildOptions(data.options, data.option_type || 'text');
+      currentOptionType = data.option_type || 'text';
+      currentOptions = data.options || [];
+      buildOptions(data.options, currentOptionType);
       startTimer(data.time_limit, data.remaining);
       break;
 
@@ -784,10 +834,13 @@ function handleMessage(data) {
       sfxReveal();
       showScreen('reveal');
       launchConfetti();
-      document.getElementById('reveal-answer-text').textContent =
-        `${OPTION_LABELS[data.correct]}. ${data.correct_text}`;
+      const revealEl = document.getElementById('reveal-answer-text');
+      if (currentOptionType === 'image' && currentOptions[data.correct]) {
+        revealEl.innerHTML = `${OPTION_LABELS[data.correct]}. <img src="${currentOptions[data.correct]}" alt="答案" style="max-height:180px;max-width:340px;border-radius:12px;object-fit:cover;vertical-align:middle;margin-left:10px;">`;
+      } else {
+        revealEl.textContent = `${OPTION_LABELS[data.correct]}. ${data.correct_text}`;
+      }
 
-      // 取得當前選項（需要從上次 question_start 存起來）
       buildDistribution(data.distribution, data.correct, [], 'text');
       showRevealMedia(data.reveal_media);
       break;
