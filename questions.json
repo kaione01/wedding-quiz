@@ -26,5 +26,19 @@
     "option_type": "image",
     "image": null,
     "reveal_media": null
+  },
+  {
+    "text": "請問這次釀的酒，酒名叫？",
+    "options": [
+      "梅好久酒",
+      "梅你活不酒",
+      "幸福久酒",
+      "要等多酒"
+    ],
+    "correct": 0,
+    "time_limit": 15,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
   }
 ]
