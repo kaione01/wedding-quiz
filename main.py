@@ -5,6 +5,7 @@ Kai & Bella Wedding 2026.05.24
 
 import asyncio
 import json
+import random
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -44,6 +45,10 @@ class GameState:
 
         # 倒數計時任務
         self.timer_task: Optional[asyncio.Task] = None
+
+        # 本輪隨機排列後的選項與正確答案 index
+        self.shuffled_options: list = []
+        self.shuffled_correct: int = 0
 
     # ── 題目 ──
     def load_questions(self):
@@ -161,16 +166,26 @@ async def _send_question():
 
     time_limit = q.get("time_limit", 10)
 
-    # 給 display/host 完整資訊
+    # 隨機排列選項（每次出題都重新洗牌）
+    orig_correct = q["correct"]
+    orig_options = q["options"]
+    indices = list(range(len(orig_options)))
+    random.shuffle(indices)
+    shuffled_opts = [orig_options[i] for i in indices]
+    shuffled_correct = indices.index(orig_correct)
+    game.shuffled_options = shuffled_opts
+    game.shuffled_correct = shuffled_correct
+
+    # 給 display/host 完整資訊（含洗牌後選項）
     await game.broadcast_displays_hosts({
         "type": "question_start",
         "index": game.current_q_index,
         "total": len(game.questions),
         "text": q["text"],
         "image": q.get("image"),
-        "options": q["options"],
+        "options": shuffled_opts,
         "time_limit": time_limit,
-        "option_type": q.get("option_type", "text"),  # "text" or "image"
+        "option_type": q.get("option_type", "text"),
     })
 
     # 給玩家只送選項（不送正確答案）
@@ -180,7 +195,7 @@ async def _send_question():
         "total": len(game.questions),
         "text": q["text"],
         "image": q.get("image"),
-        "options": q["options"],
+        "options": shuffled_opts,
         "time_limit": time_limit,
         "option_type": q.get("option_type", "text"),
     })
@@ -204,7 +219,7 @@ async def reveal_answer():
 
     game.phase = "REVEAL"
     q = game.current_question
-    correct = q["correct"]
+    correct = game.shuffled_correct          # 使用洗牌後的正確 index
     distribution = game.get_answer_distribution()
 
     # 計分
@@ -225,7 +240,7 @@ async def reveal_answer():
     reveal_payload = {
         "type": "answer_reveal",
         "correct": correct,
-        "correct_text": q["options"][correct],
+        "correct_text": game.shuffled_options[correct],
         "distribution": distribution,
         "reveal_media": q.get("reveal_media"),  # {"type":"image"|"video", "url":"..."}
         "leaderboard": leaderboard,
@@ -378,7 +393,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "total": len(game.questions),
                     "text": q["text"],
                     "image": q.get("image"),
-                    "options": q["options"],
+                    "options": game.shuffled_options,   # 使用本輪洗牌後的順序
                     "time_limit": q.get("time_limit", 20),
                     "remaining": remaining,
                     "option_type": q.get("option_type", "text"),

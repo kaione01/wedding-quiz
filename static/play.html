@@ -181,6 +181,21 @@
 
   /* ── QUESTION ── */
   #screen-question { gap: 16px; }
+
+  /* 圖片題：body 貼頂，去除上下留白 */
+  body.image-question {
+    justify-content: flex-start;
+    padding: 12px 16px;
+    min-height: 100vh;
+  }
+  body.image-question #screen-question {
+    width: 100%;
+    gap: 10px;
+  }
+  body.image-question .options-list.image-mode {
+    /* 讓圖片格子自動撐高 */
+    margin-top: 4px;
+  }
   .q-header {
     width: 100%;
     display: flex;
@@ -617,6 +632,7 @@ function buildOptions(options, type) {
   const list = document.getElementById('options-list');
   list.innerHTML = '';
   list.classList.toggle('image-mode', type === 'image');
+  document.body.classList.toggle('image-question', type === 'image');
   options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = `opt-btn ${LABELS[i]}`;
