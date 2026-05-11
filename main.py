@@ -209,7 +209,7 @@ async def _auto_timer_end(time_limit: int):
     if game.phase == "QUESTION":
         game.phase = "QUESTION_ENDED"
         # 通知 host 計時結束，按鈕可以變成「公佈答案」
-        await game.broadcast_hosts({"type": "timer_ended"})
+        await game.broadcast({"type": "timer_ended"}, game.hosts)
 
 
 async def reveal_answer():

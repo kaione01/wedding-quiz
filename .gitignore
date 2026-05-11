@@ -6,3 +6,6 @@ static/uploads/*
 !static/uploads/.gitkeep
 .env
 .DS_Store
+VPS_INFRA.md
+CLAUDE.md
+deploy.sh

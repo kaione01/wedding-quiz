@@ -196,7 +196,6 @@
     width: 100%;
     padding: 10px 12px 8px;
     gap: 8px;
-    display: flex;
     flex-direction: column;
     align-items: stretch;
   }
@@ -348,34 +347,139 @@
     background: #0a0a18;
   }
 
-  /* ── WAITING ── */
-  #screen-waiting { gap: 24px; text-align: center; }
-  .waiting-icon { font-size: 4rem; animation: spin 2s linear infinite; }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .waiting-text { font-size: 1.1rem; color: var(--text-muted); font-weight: 600; }
-  .points-earned { font-size: 2.5rem; font-weight: 900; }
-  .points-earned.correct { color: var(--correct); }
-  .points-earned.wrong   { color: #ff6b6b; }
-  .total-score { font-size: 1rem; color: var(--text-muted); }
-
-  /* ── RESULT ── */
-  #screen-result { gap: 20px; text-align: center; }
-  .result-icon { font-size: 5rem; }
-  .result-label { font-size: 1.5rem; font-weight: 800; }
-  .result-pts { font-size: 3rem; font-weight: 900; }
-  .result-pts.correct { color: var(--correct); text-shadow: 0 0 20px rgba(74,222,128,0.4); }
-  .result-pts.wrong   { color: #ff6b6b; }
-  .result-total { font-size: 1rem; color: var(--text-muted); font-weight: 600; }
-
-  /* Shake animation for wrong */
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%     { transform: translateX(-10px); }
-    40%     { transform: translateX(10px); }
-    60%     { transform: translateX(-8px); }
-    80%     { transform: translateX(8px); }
+  /* ── SELECTED (玩家選擇後的等待畫面) ── */
+  /* 強制子元素橫向填滿（覆蓋 .screen.active 的 align-items:center） */
+  #screen-selected {
+    gap: 0;
+    padding: 0;
+    align-items: stretch !important;  /* 覆蓋 .screen.active */
+    max-width: 100% !important;       /* 覆蓋 .screen max-width */
   }
-  .shake { animation: shake 0.5s ease both; }
+
+  /* 圖片題：全頁填滿 */
+  body.selected-image {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  body.selected-image #screen-selected {
+    height: 100vh;
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .sel-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .sel-media-area {
+    flex: 1 1 0%;
+    min-height: 0;
+    position: relative;          /* for overlay */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a18;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* 文字題：fixed 高度 */
+  body:not(.selected-image) .sel-media-area {
+    height: 220px;
+    flex: none;
+    border-radius: 16px;
+    margin: 12px 16px;
+    width: calc(100% - 32px);
+    border: 1px solid var(--border);
+  }
+  .sel-media-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    animation: selPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  /* 選擇提示 — 疊在圖片正中央 */
+  .sel-info-bar {
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    transform: translateY(-50%);
+    z-index: 5;
+    text-align: center;
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: #fff;
+    letter-spacing: 1px;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.68);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  /* 文字題：info bar 在頂部，不遮文字 */
+  body:not(.selected-image) .sel-info-bar {
+    top: 0;
+    transform: none;
+    font-size: 1.05rem;
+    padding: 10px 16px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 16px 16px 0 0;
+  }
+  .sel-text-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--text-main);
+    text-align: center;
+    padding: 20px;
+    line-height: 1.4;
+    animation: selPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes selPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .sel-wait-bar {
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+  }
+  .sel-wait-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-muted);
+    animation: dotBlink 1.2s infinite;
+  }
+  .sel-wait-dot:nth-child(2) { animation-delay: 0.2s; }
+  .sel-wait-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotBlink {
+    0%,80%,100% { opacity: 0.2; }
+    40%         { opacity: 1; }
+  }
 
   /* ── LEADERBOARD ── */
   #screen-leaderboard { gap: 16px; }
@@ -419,59 +523,76 @@
   #screen-reveal {
     padding: 0;
     gap: 0;
+    align-items: stretch !important;
+    max-width: 100% !important;
   }
   body.reveal-active {
     height: 100vh;
     min-height: 0;
     overflow: hidden;
     padding: 0;
-    justify-content: flex-start;
-    align-items: stretch;
+    justify-content: center;
+    align-items: center;
   }
   body.reveal-active #screen-reveal {
     height: 100vh;
     width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    background: #0a0a18;
+    max-width: none !important;
+  }
+  /* 卡片：把圖 + 上下文字包在一起 */
+  .reveal-card {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
     align-items: stretch;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
   }
   .reveal-top-bar {
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 16px;
-    background: rgba(74,222,128,0.12);
+    padding: 14px 18px;
+    background: rgba(74,222,128,0.15);
     border-bottom: 1px solid rgba(74,222,128,0.2);
   }
   .reveal-top-label {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 800;
     color: var(--correct);
     letter-spacing: 1px;
+    flex-shrink: 0;
   }
   .reveal-top-answer {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-main);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #fff;
   }
   .reveal-media-area {
-    flex: 1 1 0%;
-    min-height: 0;
+    width: 100%;
+    height: 55vw;          /* 正方形偏高，圖片題剛好 */
+    max-height: 52vh;      /* 螢幕高度上限 */
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
     background: #0a0a18;
     overflow: hidden;
   }
   .reveal-media-area img,
   .reveal-media-area video {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    border-radius: 12px;
     animation: revealPopMobile 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
   }
   @keyframes revealPopMobile {
@@ -486,38 +607,38 @@
     text-align: center;
     line-height: 1.4;
     text-shadow: 0 0 24px var(--gold-glow);
-    padding: 20px;
+    padding: 28px 20px;
     animation: revealPopMobile 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
   }
   .reveal-personal-bar {
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 14px 20px;
+    gap: 10px;
+    padding: 14px 18px;
     background: var(--bg-card);
     border-top: 1px solid var(--border);
   }
-  .reveal-personal-icon { font-size: 2rem; }
+  .reveal-personal-icon { font-size: 1.8rem; flex-shrink: 0; }
   .reveal-personal-info { flex: 1; }
   .reveal-personal-label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     font-weight: 700;
   }
   .reveal-personal-pts {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 900;
     line-height: 1.2;
   }
   .reveal-personal-pts.correct { color: var(--correct); }
   .reveal-personal-pts.wrong   { color: #ff6b6b; }
   .reveal-personal-total {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
     font-weight: 600;
     text-align: right;
+    flex-shrink: 0;
   }
 
   /* ── FINISH ── */
@@ -568,37 +689,42 @@
   <div class="options-list" id="options-list"></div>
 </div>
 
-<!-- WAITING (after submitting answer) -->
-<div id="screen-waiting" class="screen">
-  <div class="waiting-icon">⏳</div>
-  <div class="waiting-text">已送出，等待公佈答案</div>
+<!-- SELECTED (玩家選完答案後的等待畫面，計時繼續) -->
+<div id="screen-selected" class="screen">
+  <div class="sel-header">
+    <span id="sel-progress">第 1 / 3 題</span>
+    <div class="q-timer" id="sel-timer">10</div>
+  </div>
+  <div class="sel-media-area" id="sel-media-area">
+    <!-- sel-info-bar + media 由 JS 動態注入 -->
+  </div>
+  <div class="sel-wait-bar">
+    等待答案公佈
+    <span class="sel-wait-dot"></span>
+    <span class="sel-wait-dot"></span>
+    <span class="sel-wait-dot"></span>
+  </div>
 </div>
 
 <!-- REVEAL (answer announce phase) -->
 <div id="screen-reveal" class="screen">
-  <div class="reveal-top-bar">
-    <span class="reveal-top-label">✅ 正確答案</span>
-    <span class="reveal-top-answer" id="reveal-answer-label"></span>
-  </div>
-  <div class="reveal-media-area" id="reveal-media-area">
-    <!-- big image / text injected by JS -->
-  </div>
-  <div class="reveal-personal-bar">
-    <div class="reveal-personal-icon" id="reveal-p-icon">🎉</div>
-    <div class="reveal-personal-info">
-      <div class="reveal-personal-label" id="reveal-p-label">答對了！</div>
-      <div class="reveal-personal-pts correct" id="reveal-p-pts">+850 分</div>
+  <div class="reveal-card">
+    <div class="reveal-top-bar">
+      <span class="reveal-top-label">✅ 正確答案</span>
+      <span class="reveal-top-answer" id="reveal-answer-label"></span>
     </div>
-    <div class="reveal-personal-total" id="reveal-p-total">累積 850 分</div>
+    <div class="reveal-media-area" id="reveal-media-area">
+      <!-- big image / text injected by JS -->
+    </div>
+    <div class="reveal-personal-bar">
+      <div class="reveal-personal-icon" id="reveal-p-icon">🎉</div>
+      <div class="reveal-personal-info">
+        <div class="reveal-personal-label" id="reveal-p-label">答對了！</div>
+        <div class="reveal-personal-pts correct" id="reveal-p-pts">+850 分</div>
+      </div>
+      <div class="reveal-personal-total" id="reveal-p-total">累積 850 分</div>
+    </div>
   </div>
-</div>
-
-<!-- RESULT -->
-<div id="screen-result" class="screen">
-  <div id="result-icon" class="result-icon">🎉</div>
-  <div id="result-label" class="result-label">答對了！</div>
-  <div id="result-pts" class="result-pts correct">+850 分</div>
-  <div id="result-total" class="result-total">累積 850 分</div>
 </div>
 
 <!-- LEADERBOARD -->
@@ -624,9 +750,10 @@ let currentOptions = [], currentOptionType = 'text';
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
-  // toggle full-bleed body classes
-  document.body.classList.toggle('image-question', id === 'question' && currentOptionType === 'image');
-  document.body.classList.toggle('reveal-active',  id === 'reveal');
+  // 全頁填滿 body class 切換
+  document.body.classList.toggle('image-question',  id === 'question' && currentOptionType === 'image');
+  document.body.classList.toggle('selected-image',  id === 'selected' && currentOptionType === 'image');
+  document.body.classList.toggle('reveal-active',   id === 'reveal');
 }
 
 // ── 音效 ──
@@ -648,15 +775,19 @@ function sfxCorrect() { [523,659,784].forEach((f,i) => setTimeout(()=>playTone(f
 function sfxWrong()   { playTone(160, 0.35, 'sawtooth', 0.3); }
 function sfxTick()    { playTone(440, 0.06, 'square', 0.1); }
 
-// ── 倒數 ──
+// ── 倒數（同時更新所有畫面的計時器元素）──
 let timerInterval = null;
 function startTimer(limit, remaining) {
   clearInterval(timerInterval);
   let t = remaining !== undefined ? remaining : limit;
-  const el = document.getElementById('q-timer');
+  const timerIds = ['q-timer', 'sel-timer'];
   function update() {
-    el.textContent = Math.ceil(t);
-    el.style.color = t <= 5 ? '#ff5555' : t <= 10 ? '#ffd700' : '#50fa7b';
+    const display = Math.ceil(t);
+    const color = t <= 5 ? '#ff5555' : t <= 10 ? '#ffd700' : '#50fa7b';
+    timerIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = display; el.style.color = color; }
+    });
     if (t <= 5 && t > 0) sfxTick();
     if (t <= 0) clearInterval(timerInterval);
     t = Math.max(0, t - 1);
@@ -730,7 +861,9 @@ function handleMsg(data) {
       currentOptions = data.options || [];
       currentOptionType = data.option_type || 'text';
       showScreen('question');
-      document.getElementById('q-progress').textContent = `第 ${data.index+1} / ${data.total} 題`;
+      const progressText = `第 ${data.index+1} / ${data.total} 題`;
+      document.getElementById('q-progress').textContent = progressText;
+      document.getElementById('sel-progress').textContent = progressText;
       const imgEl = document.getElementById('q-img');
       if (data.image) { imgEl.src = data.image; imgEl.style.display = 'block'; }
       else { imgEl.style.display = 'none'; }
@@ -740,8 +873,7 @@ function handleMsg(data) {
       break;
 
     case 'answer_received':
-      clearInterval(timerInterval);
-      showScreen('waiting');
+      // 不做任何事 — 玩家送出答案時由 submitAnswer() 直接切換到 selected 畫面
       break;
 
     case 'answer_reveal': {
@@ -800,7 +932,7 @@ function handleMsg(data) {
     }
 
     case 'personal_result':
-      // legacy fallback — kept in case server sends it
+      // 已由 answer_reveal 取代，忽略
       break;
 
     case 'leaderboard':
@@ -853,10 +985,42 @@ function buildOptions(options, type) {
 // ── 送出答案 ──
 function submitAnswer(optIndex) {
   sfxTap();
-  // 禁用所有按鈕
   document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
   document.getElementById(`opt-${optIndex}`)?.classList.add('selected');
   sendAction('answer', { option: optIndex });
+
+  // 切到「已選擇」畫面，計時器繼續
+  buildSelectedScreen(optIndex);
+  showScreen('selected');
+}
+
+// ── 建立「已選擇」畫面內容 ──
+function buildSelectedScreen(optIdx) {
+  const area = document.getElementById('sel-media-area');
+  if (!area) return;
+  area.innerHTML = '';
+
+  const label = LABELS[optIdx];
+
+  // 先放圖片或文字內容
+  if (currentOptionType === 'image' && currentOptions[optIdx]) {
+    const img = document.createElement('img');
+    img.src = currentOptions[optIdx];
+    img.alt = label;
+    area.appendChild(img);
+  } else if (currentOptions[optIdx]) {
+    const div = document.createElement('div');
+    div.className = 'sel-text-big';
+    div.textContent = currentOptions[optIdx];
+    area.appendChild(div);
+  }
+
+  // 疊上 info-bar（圖片題：中央；文字題：頂部）
+  const infoBar = document.createElement('div');
+  infoBar.className = 'sel-info-bar';
+  infoBar.id = 'sel-info-bar';
+  infoBar.textContent = `你選擇的是：${label}`;
+  area.appendChild(infoBar);
 }
 
 // ── 排行榜 ──
