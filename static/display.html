@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kai & Bella 婚禮問答</title>
+<!-- PWA -->
+<link rel="manifest" href="/quiz/manifest.json" />
+<meta name="theme-color" content="#C9A96E" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="婚禮問答" />
+<link rel="apple-touch-icon" href="/quiz/static/icon-192.png" />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -179,6 +186,66 @@
   .prize-item:nth-child(1) .prize-name { color: var(--gold-light); }
 
   /* ══════════════════════════════
+     CATEGORY INTRO（類別過場）
+  ══════════════════════════════ */
+  #screen-category-intro {
+    background: var(--bg-deep);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #screen-category-intro::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90vw; height: 90vh;
+    background: radial-gradient(ellipse, rgba(201,169,110,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .cat-intro-tag {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6vw;
+    color: var(--gold);
+    letter-spacing: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: catFadeIn 0.6s ease 0.2s both;
+  }
+  .cat-intro-title {
+    font-family: 'Playfair Display', 'Noto Serif TC', serif;
+    font-size: 9vw;
+    font-weight: 900;
+    letter-spacing: 8px;
+    line-height: 1.2;
+    text-align: center;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 40px var(--gold-glow));
+    opacity: 0;
+    animation: catTitleIn 0.9s cubic-bezier(0.34,1.56,0.64,1) 0.4s both;
+  }
+  .cat-intro-divider {
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 28px 0 0;
+    opacity: 0;
+    animation: catFadeIn 0.6s ease 1.0s both;
+  }
+  @keyframes catFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes catTitleIn {
+    from { opacity: 0; transform: scale(0.85); letter-spacing: 24px; }
+    to   { opacity: 1; transform: scale(1); letter-spacing: 8px; }
+  }
+
+  /* ══════════════════════════════
      QUESTION
   ══════════════════════════════ */
   #screen-question { background: var(--bg-deep); overflow: hidden; }
@@ -206,7 +273,7 @@
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-  .q-progress { font-size: 1.4vw; color: var(--text-muted); font-weight: 700; }
+  .q-progress { font-size: 2vw; color: var(--text-muted); font-weight: 700; }
   .q-progress strong { color: var(--gold-light); }
 
   /* 倒數圓圈 */
@@ -219,7 +286,7 @@
                  justify-content: center; font-size: 1.8vw; font-weight: 900;
                  font-family: 'Playfair Display', serif; }
 
-  .q-answered { font-size: 1.2vw; color: var(--text-muted); font-weight: 600; }
+  .q-answered { font-size: 1.8vw; color: var(--text-muted); font-weight: 600; }
 
   .question-body {
     flex: 1;
@@ -294,7 +361,7 @@
   .option-icon {
     width: 44px; height: 44px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.3vw; font-weight: 900; flex-shrink: 0; margin-left: 4px;
+    font-size: 2vw; font-weight: 900; flex-shrink: 0; margin-left: 4px;
   }
   .option-box.A .option-icon { background: rgba(184,77,106,0.2); color: var(--opt-A); }
   .option-box.B .option-icon { background: rgba(61,109,181,0.2); color: var(--opt-B); }
@@ -305,10 +372,10 @@
 
   /* ── 圖片選項模式：四張圖永遠貼滿視窗，不溢出 ── */
   #screen-question.image-mode {
-    display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    /* display: flex 由 .screen.active 提供;不在 ID+class 層直接寫,避免特異性蓋住 .screen 的 display:none */
   }
   /* Header 壓到最小 */
   #screen-question.image-mode .question-progress-bar { height: 3px; }
@@ -400,8 +467,8 @@
   ══════════════════════════════ */
   #screen-reveal {
     background: var(--bg-deep);
-    display: flex; flex-direction: column;
     overflow: hidden;
+    /* display: flex 由 .screen.active 提供;不在 ID 層直接寫,避免特異性蓋住 .screen 的 display:none */
   }
   /* 頂部標題列 */
   .reveal-header {
@@ -412,7 +479,7 @@
     flex-shrink: 0;
   }
   .reveal-correct-label {
-    font-size: 1.3vw; color: var(--correct); font-weight: 700;
+    font-size: 2vw; color: var(--correct); font-weight: 700;
     letter-spacing: 2px; flex-shrink: 0;
   }
   .reveal-correct-text {
@@ -461,7 +528,7 @@
   .dist-label {
     width: 36px; height: 36px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1vw; flex-shrink: 0;
+    font-weight: 900; font-size: 1.6vw; flex-shrink: 0;
     background: var(--bg-card);
   }
   .dist-label.A { color: var(--opt-A); border: 2px solid var(--opt-A); }
@@ -476,13 +543,200 @@
   .dist-bar {
     height: 100%; border-radius: 6px; transition: width 1s ease;
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 8px; font-weight: 700; font-size: 1vw; min-width: 40px; opacity: 0.85;
+    padding-right: 8px; font-weight: 700; font-size: 1.4vw; min-width: 40px; opacity: 0.85;
   }
   .dist-bar.A { background: var(--opt-A); }
   .dist-bar.B { background: var(--opt-B); }
   .dist-bar.C { background: var(--opt-C); }
   .dist-bar.D { background: var(--opt-D); }
-  .dist-count { font-size: 1.1vw; font-weight: 800; color: var(--text-muted); }
+  .dist-count { font-size: 1.7vw; font-weight: 800; color: var(--text-muted); }
+
+  /* ══════════════════════════════
+     FASTEST BREAKDOWN（最快榜 / 選項分布）
+  ══════════════════════════════ */
+  #screen-fastest {
+    background: var(--bg-deep);
+    overflow: hidden;
+    padding: 0;
+    /* display: flex 由 .screen.active 提供;不在 ID 層直接寫,避免特異性蓋住 .screen 的 display:none */
+  }
+  .fastest-hero {
+    flex: 0 0 auto;
+    padding: 28px 48px 18px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(201,169,110,0.14) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(201,169,110,0.18);
+  }
+  .fastest-hero-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8vw;
+    color: var(--gold);
+    letter-spacing: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .fastest-hero-name {
+    font-family: 'Playfair Display', 'Noto Serif TC', serif;
+    font-size: 5.2vw;
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 24px var(--gold-glow));
+    animation: heroIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .fastest-hero-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2vw;
+    font-weight: 700;
+    color: var(--correct);
+    margin-top: 6px;
+    letter-spacing: 2px;
+    animation: heroIn 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+  }
+  .fastest-hero-empty {
+    font-size: 1.8vw;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 30px 0;
+    animation: heroIn 0.6s ease both;
+  }
+  @keyframes heroIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .fastest-options {
+    flex: 1 1 0%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 48px 24px;
+    overflow: hidden;
+  }
+  .fopt-row {
+    flex: 1 1 0%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 60px auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 18px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: foptIn 0.5s ease both;
+  }
+  /* 最快榜:選項內容預覽（文字題顯示文字、圖片題顯示縮圖）*/
+  .fopt-preview {
+    max-width: 26vw;
+    color: var(--text-main);
+    font-weight: 700;
+    font-size: 1.6vw;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .fopt-preview-img {
+    width: 4vw;
+    height: 4vw;
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .fopt-row.correct .fopt-preview { color: var(--correct); }
+  .fopt-row.A { animation-delay: 0.10s; }
+  .fopt-row.B { animation-delay: 0.20s; }
+  .fopt-row.C { animation-delay: 0.30s; }
+  .fopt-row.D { animation-delay: 0.40s; }
+  @keyframes foptIn {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .fopt-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 6px;
+  }
+  .fopt-row.A::before { background: var(--opt-A); }
+  .fopt-row.B::before { background: var(--opt-B); }
+  .fopt-row.C::before { background: var(--opt-C); }
+  .fopt-row.D::before { background: var(--opt-D); }
+  .fopt-row.correct {
+    border-color: var(--correct);
+    box-shadow: 0 0 24px rgba(74,222,128,0.25), inset 0 0 0 1px var(--correct);
+    background: linear-gradient(90deg, rgba(74,222,128,0.10), rgba(74,222,128,0.02));
+  }
+  .fopt-label {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8vw;
+    font-weight: 900;
+    background: var(--bg-glass);
+  }
+  .fopt-row.A .fopt-label { color: var(--opt-A); border: 2px solid var(--opt-A); }
+  .fopt-row.B .fopt-label { color: var(--opt-B); border: 2px solid var(--opt-B); }
+  .fopt-row.C .fopt-label { color: var(--opt-C); border: 2px solid var(--opt-C); }
+  .fopt-row.D .fopt-label { color: var(--opt-D); border: 2px solid var(--opt-D); }
+  .fopt-row.correct .fopt-label { box-shadow: 0 0 0 3px var(--correct); }
+
+  .fopt-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .fopt-bar-row { display: flex; align-items: center; gap: 12px; }
+  .fopt-bar-wrap {
+    flex: 1; background: var(--bg-glass);
+    border-radius: 6px; height: 16px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .fopt-bar {
+    height: 100%; border-radius: 6px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.85;
+  }
+  .fopt-row.A .fopt-bar { background: var(--opt-A); }
+  .fopt-row.B .fopt-bar { background: var(--opt-B); }
+  .fopt-row.C .fopt-bar { background: var(--opt-C); }
+  .fopt-row.D .fopt-bar { background: var(--opt-D); }
+  .fopt-count {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8vw;
+    font-weight: 900;
+    color: var(--gold-light);
+    min-width: 90px;
+    text-align: right;
+  }
+  .fopt-fastest {
+    font-size: 1.4vw;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .fopt-fastest strong {
+    color: var(--text-main);
+    font-weight: 800;
+  }
+  .fopt-row.correct .fopt-fastest strong {
+    color: var(--correct);
+  }
+  .fopt-fastest-none {
+    font-size: 1.3vw;
+    color: rgba(255,255,255,0.25);
+    font-style: italic;
+  }
 
   /* ══════════════════════════════
      LEADERBOARD
@@ -534,26 +788,82 @@
   }
 
   /* ══════════════════════════════
-     FINISHED
+     FINISHED（最終獎品排行榜）
   ══════════════════════════════ */
   #screen-finish {
     background: var(--bg-deep);
     align-items: center; justify-content: center; gap: 28px;
+    padding: 40px 0;
   }
   .finish-title {
     font-family: 'Playfair Display', serif;
-    font-size: 4vw; font-weight: 900; text-align: center;
+    font-size: 3.4vw; font-weight: 900; text-align: center;
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 20px var(--gold-glow));
+    letter-spacing: 4px;
   }
-  .finish-hearts {
-    font-size: 3vw; letter-spacing: 12px;
-    animation: pulse 1.5s ease-in-out infinite;
+  .finish-prize-list {
+    width: 68%;
+    display: flex; flex-direction: column;
+    gap: 14px;
   }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+  .fp-row {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 28px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    animation: fpSlide 0.45s ease both;
+  }
+  .fp-row.gold {
+    background: linear-gradient(90deg, rgba(201,169,110,0.28), rgba(240,208,128,0.10));
+    border-color: var(--gold);
+    box-shadow: 0 0 32px var(--gold-glow);
+    animation-delay: 0.10s;
+  }
+  .fp-row.silver {
+    background: linear-gradient(90deg, rgba(200,200,220,0.18), rgba(220,220,240,0.06));
+    border-color: rgba(220,220,240,0.5);
+    animation-delay: 0.25s;
+  }
+  .fp-row.bronze {
+    background: linear-gradient(90deg, rgba(200,140,80,0.22), rgba(220,160,100,0.06));
+    border-color: rgba(220,160,100,0.5);
+    animation-delay: 0.40s;
+  }
+  .fp-row.normal { animation-delay: 0.55s; }
+  .fp-medal {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6vw; font-weight: 900;
+    text-align: center;
+  }
+  .fp-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fp-name {
+    font-size: 1.9vw; font-weight: 800;
+    color: var(--text-main);
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .fp-row.gold .fp-name { color: var(--gold-light); }
+  .fp-prize {
+    font-size: 1.05vw; color: var(--text-muted);
+    font-weight: 600;
+  }
+  .fp-prize strong {
+    color: var(--gold-light);
+    font-weight: 800;
+  }
+  .fp-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8vw; font-weight: 900;
+    color: var(--gold-light);
+  }
+  @keyframes fpSlide {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
   }
 
   /* 通用 */
@@ -605,6 +915,13 @@
   <div id="lobby-player-count">已加入 <span id="player-count">0</span> 位賓客</div>
 </div>
 
+<!-- CATEGORY INTRO -->
+<div id="screen-category-intro" class="screen">
+  <div class="cat-intro-tag" id="cat-intro-tag">CHAPTER</div>
+  <div class="cat-intro-title" id="cat-intro-title">類別名稱</div>
+  <div class="cat-intro-divider"></div>
+</div>
+
 <!-- QUESTION -->
 <div id="screen-question" class="screen">
   <div class="question-progress-bar">
@@ -641,18 +958,28 @@
   <div class="reveal-dist-strip" id="distribution"></div>
 </div>
 
+<!-- FASTEST BREAKDOWN（最快榜 / 選項分布） -->
+<div id="screen-fastest" class="screen">
+  <div class="fastest-hero">
+    <div class="fastest-hero-label">🎤 最快答對</div>
+    <div id="fastest-hero-body">
+      <div class="fastest-hero-name" id="fastest-hero-name">—</div>
+      <div class="fastest-hero-time" id="fastest-hero-time">— 秒</div>
+    </div>
+  </div>
+  <div class="fastest-options" id="fastest-options"></div>
+</div>
+
 <!-- LEADERBOARD -->
 <div id="screen-leaderboard" class="screen">
   <div class="lb-title" id="lb-title">🏆 目前排行榜</div>
   <div class="lb-list" id="lb-list"></div>
 </div>
 
-<!-- FINISHED -->
+<!-- FINISHED（最終獎品排行榜） -->
 <div id="screen-finish" class="screen">
-  <div class="finish-hearts">💒 🎊 💒</div>
-  <div class="finish-title">恭喜 Kai &amp; Bella！</div>
-  <div class="lb-list" id="final-lb-list" style="width:65%"></div>
-  <div class="finish-hearts">❤️ 祝百年好合 ❤️</div>
+  <div class="finish-title">🏆 最終排行榜</div>
+  <div class="finish-prize-list" id="finish-prize-list"></div>
 </div>
 
 <script>
@@ -856,6 +1183,106 @@ function buildRevealMain(data) {
   }
 }
 
+// ── 最快榜 / 選項分布 ──
+function buildFastestBreakdown(data) {
+  // Hero 區:最快答對者大字
+  const heroBody = document.getElementById('fastest-hero-body');
+  if (data.fastest_correct) {
+    heroBody.innerHTML = `
+      <div class="fastest-hero-name">${escapeHtml(data.fastest_correct.nickname)}</div>
+      <div class="fastest-hero-time">${data.fastest_correct.time.toFixed(2)} 秒</div>
+    `;
+  } else {
+    heroBody.innerHTML = `<div class="fastest-hero-empty">這題大家太謙虛了 😅 沒人答對</div>`;
+  }
+
+  // 選項條
+  const container = document.getElementById('fastest-options');
+  container.innerHTML = '';
+  const maxCount = Math.max(...data.options.map(o => o.count), 1);
+
+  const isImageMode = data.option_type === 'image';
+  data.options.forEach(opt => {
+    const isCorrect = opt.index === data.correct;
+    const row = document.createElement('div');
+    row.className = `fopt-row ${opt.label}${isCorrect ? ' correct' : ''}`;
+
+    const fastestHtml = opt.fastest
+      ? `<div class="fopt-fastest">最快：<strong>${escapeHtml(opt.fastest.nickname)}</strong> · ${opt.fastest.time.toFixed(2)} 秒</div>`
+      : `<div class="fopt-fastest-none">無人選此選項</div>`;
+
+    // 選項預覽:圖片題顯示縮圖,文字題顯示文字
+    const previewHtml = isImageMode
+      ? `<img class="fopt-preview-img" src="${escapeHtml(opt.option_text || '')}" alt="${opt.label}">`
+      : `<div class="fopt-preview">${escapeHtml(opt.option_text || '')}</div>`;
+
+    row.innerHTML = `
+      <div class="fopt-label">${opt.label}</div>
+      ${previewHtml}
+      <div class="fopt-body">
+        <div class="fopt-bar-row">
+          <div class="fopt-bar-wrap"><div class="fopt-bar" style="width:0%"></div></div>
+        </div>
+        ${fastestHtml}
+      </div>
+      <div class="fopt-count">${opt.count} <span style="font-size:0.55em;color:var(--text-muted);font-weight:600">人</span></div>
+    `;
+    container.appendChild(row);
+
+    // 動畫:條寬延遲展開
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const bar = row.querySelector('.fopt-bar');
+        bar.style.width = (opt.count / maxCount * 100) + '%';
+      }, 200);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// 題目文字渲染:先全 escape,再白名單還原 <sup>/<sub>/<br>(用於數學次方)
+function renderQuestionText(text) {
+  return escapeHtml(text)
+    .replace(/&lt;sup&gt;(.*?)&lt;\/sup&gt;/g, '<sup>$1</sup>')
+    .replace(/&lt;sub&gt;(.*?)&lt;\/sub&gt;/g, '<sub>$1</sub>')
+    .replace(/&lt;br\s*\/?&gt;/g, '<br>')
+    .replace(/\n/g, '<br>');
+}
+
+// ── 最終獎品排行榜 (Top 5,Top 3 帶獎品) ──
+const FINAL_PRIZES = [
+  { medal: '🥇', name: '夏慕尼兩人餐券', cls: 'gold' },
+  { medal: '🥈', name: '星巴克兌換券 ×10', cls: 'silver' },
+  { medal: '🥉', name: '威秀電影票雙人券', cls: 'bronze' },
+];
+
+function buildFinalPrizeBoard(list) {
+  const container = document.getElementById('finish-prize-list');
+  container.innerHTML = '';
+  const top5 = (list || []).slice(0, 5);
+  top5.forEach((item, i) => {
+    const prize = FINAL_PRIZES[i];  // 1-3 名才有獎品
+    const row = document.createElement('div');
+    row.className = `fp-row ${prize ? prize.cls : 'normal'}`;
+    const medal = prize ? prize.medal : (i + 1);
+    const prizeHtml = prize
+      ? `<div class="fp-prize">獲得：<strong>${escapeHtml(prize.name)}</strong></div>`
+      : '';
+    row.innerHTML = `
+      <div class="fp-medal">${medal}</div>
+      <div class="fp-body">
+        <div class="fp-name">${escapeHtml(item.nickname)}</div>
+        ${prizeHtml}
+      </div>
+      <div class="fp-score">${item.score.toLocaleString()} 分</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
 // ── 排行榜 ──
 function buildLeaderboard(list, containerId) {
   const container = document.getElementById(containerId);
@@ -886,7 +1313,21 @@ function handleMessage(data) {
       const playUrl = `${location.protocol}//${location.hostname}/quiz/play`;
       document.getElementById('join-url').textContent = `${location.hostname}/quiz/play`;
       document.getElementById('join-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(playUrl)}`;
-      showScreen('lobby');
+      // 若已不在 LOBBY,讓後續到達的 category_intro/question_start 等訊息切換畫面
+      if (data.phase === 'LOBBY' || !data.phase) showScreen('lobby');
+      break;
+
+    case 'category_intro':
+      clearInterval(timerInterval);
+      document.getElementById('cat-intro-tag').textContent =
+        `CHAPTER ${data.category_index} / ${data.category_total}`;
+      document.getElementById('cat-intro-title').textContent = data.category;
+      // 強制重啟動畫:移除 active 後 reflow 再加回
+      const catScreen = document.getElementById('screen-category-intro');
+      catScreen.classList.remove('active');
+      void catScreen.offsetWidth;
+      showScreen('category-intro');
+      sfxReveal();
       break;
 
     case 'player_count':
@@ -907,7 +1348,8 @@ function handleMessage(data) {
         imgEl.src = data.image; imgEl.style.display = 'block';
       } else { imgEl.style.display = 'none'; }
 
-      document.getElementById('q-text').textContent = data.text;
+      // 題目用 innerHTML 渲染,讓 questions.json 內的 <sup> 等數學標籤正確顯示
+      document.getElementById('q-text').innerHTML = renderQuestionText(data.text);
       currentOptionType = data.option_type || 'text';
       currentOptions = data.options || [];
       buildOptions(data.options, currentOptionType);
@@ -920,6 +1362,9 @@ function handleMessage(data) {
 
     case 'answer_reveal':
       clearInterval(timerInterval);
+      // 重連時 currentOptions / currentOptionType 可能為空，從 payload 補回
+      if (data.options)     currentOptions    = data.options;
+      if (data.option_type) currentOptionType = data.option_type;
       sfxReveal();
       showScreen('reveal');
       launchConfetti();
@@ -934,6 +1379,12 @@ function handleMessage(data) {
       buildDistribution(data.distribution, data.correct);
       break;
 
+    case 'option_breakdown':
+      sfxReveal();
+      buildFastestBreakdown(data);
+      showScreen('fastest');
+      break;
+
     case 'leaderboard':
       sfxLeaderboard();
       buildLeaderboard(data.leaderboard, 'lb-list');
@@ -944,7 +1395,8 @@ function handleMessage(data) {
 
     case 'game_finish':
       sfxLeaderboard();
-      buildLeaderboard(data.leaderboard, 'final-lb-list');
+      launchConfetti();
+      buildFinalPrizeBoard(data.leaderboard);
       showScreen('finish');
       break;
 
@@ -969,6 +1421,15 @@ function connect() {
 
 document.addEventListener('click', ensureAudio);
 connect();
+</script>
+
+<!-- PWA Service Worker 註冊 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/quiz/sw.js', { scope: '/quiz/' })
+      .then(() => console.log('[PWA] Service Worker 已註冊'))
+      .catch(err => console.warn('[PWA] SW 註冊失敗:', err));
+  }
 </script>
 </body>
 </html>

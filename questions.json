@@ -1,25 +1,96 @@
 [
   {
-    "text": "今天新郎是？",
+    "category": "暖身題",
+    "text": "這次婚禮的 LINE 官方帳號叫什麼名字？",
     "options": [
-      "/quiz/static/uploads/Q1_2.webp",
-      "/quiz/static/uploads/Q1_A.webp",
-      "/quiz/static/uploads/Q1_1.webp",
-      "/quiz/static/uploads/Q1_3.webp"
+      "阿凱貝拉幸福開拍",
+      "阿凱貝拉a婚禮小助手",
+      "阿凱貝拉a婚禮小秘書",
+      "Kai & Bella wedding"
     ],
-    "correct": 1,
+    "correct": 2,
     "time_limit": 10,
-    "option_type": "image",
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q1.webp"
+    }
+  },
+  {
+    "category": "暖身題",
+    "text": "新郎和新娘是怎麼認識的？",
+    "options": [
+      "公司同事，因為唱歌聚會才變熟",
+      "公司同事，因為一起工作才變熟",
+      "新郎在咖啡店搭訕，然後請新娘喝咖啡",
+      "在月老廟，新郎跟新娘說你就是我的姻緣"
+    ],
+    "correct": 0,
+    "time_limit": 10,
+    "option_type": "text",
     "image": null,
     "reveal_media": null
   },
   {
-    "text": "今天新娘是？",
+    "category": "婚宴乖寶寶題",
+    "text": "簽到桌的貼紙活動，是以哪個角色作為代表？",
     "options": [
-      "/quiz/static/uploads/Q2_1.webp",
-      "/quiz/static/uploads/Q2_3.webp",
-      "/quiz/static/uploads/Q2_A.webp",
-      "/quiz/static/uploads/Q2_2.webp"
+      "佩佩豬",
+      "宛倫小豬",
+      "松阪豬",
+      "Lulu豬"
+    ],
+    "correct": 3,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q3.webp"
+    }
+  },
+  {
+    "category": "婚宴乖寶寶題",
+    "text": "這次新郎新娘親手釀的酒，叫什麼名字？",
+    "options": [
+      "太酒梅聯絡",
+      "梅好久酒",
+      "幸福久酒",
+      "要等多酒"
+    ],
+    "correct": 1,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q4.webp"
+    }
+  },
+  {
+    "category": "婚宴乖寶寶題",
+    "text": "電子喜帖裡留言五星好評祝福的人，不包含以下哪一位？",
+    "options": [
+      "張凌赫",
+      "Karina",
+      "早餐店老闆娘",
+      "朴敘俊"
+    ],
+    "correct": 0,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "婚宴乖寶寶題",
+    "text": "開場影片中，由新娘親自配音的角色是哪一個？",
+    "options": [
+      "/quiz/static/uploads/Q6_1.webp",
+      "/quiz/static/uploads/Q6_2.webp",
+      "/quiz/static/uploads/Q6_A.webp",
+      "/quiz/static/uploads/Q6_3.webp"
     ],
     "correct": 2,
     "time_limit": 10,
@@ -28,17 +99,234 @@
     "reveal_media": null
   },
   {
-    "text": "請問這次釀的酒，酒名叫？",
+    "category": "婚宴乖寶寶題",
+    "text": "婚紗照在海邊拍攝時，新郎與新娘分別穿什麼顏色？",
     "options": [
-      "梅好久酒",
-      "梅你活不酒",
-      "幸福久酒",
-      "要等多酒"
+      "棕色；粉色",
+      "黑色；白色",
+      "粉色；棕色",
+      "黑色；黑色"
+    ],
+    "correct": 3,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q7.webp"
+    }
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "新郎新娘當同事時，他們任職的公司網站叫什麼名字？",
+    "options": [
+      "生活市集",
+      "生活工場",
+      "生活百貨",
+      "好好生活"
     ],
     "correct": 0,
     "time_limit": 10,
     "option_type": "text",
     "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q8.webp"
+    }
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "新郎新娘互加 LINE 後，第一句話是誰說的、說了什麼？",
+    "options": [
+      "新娘。「你是誰？」",
+      "新郎。「叫到車沒」",
+      "新娘。「信不信我一個月把你追到手」",
+      "新郎。「你剛剛唱的歌叫甚麼名字」"
+    ],
+    "correct": 1,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
     "reveal_media": null
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "哪一位歷史名人，跟新郎是同一天生日？",
+    "options": [
+      "唐納·川普（Donald Trump）",
+      "諸葛·孔明（Pigbrother Holelight）",
+      "曹操（Cao Cao）",
+      "詹姆士·門羅（James Monroe）"
+    ],
+    "correct": 3,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q10.webp"
+    }
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "傳說新郎是新娘向月老求來的。下列哪一項，不是新娘當初許下的條件？",
+    "options": [
+      "眼裡只有她",
+      "175公分",
+      "帥",
+      "跟她一起成長"
+    ],
+    "correct": 2,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "新郎現在在新娘的 LINE 裡，被存成什麼暱稱？",
+    "options": [
+      "我的禮物",
+      "我的報應",
+      "我的寶貝",
+      "我的坐騎"
+    ],
+    "correct": 0,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q12.webp"
+    }
+  },
+  {
+    "category": "新郎新娘背景題",
+    "text": "兩人的交往紀念日，同時也是哪一個日子？",
+    "options": [
+      "新娘生日",
+      "結婚紀念日",
+      "白色情人節",
+      "新郎生日"
+    ],
+    "correct": 3,
+    "time_limit": 10,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "看圖猜答案",
+    "text": "今天的新郎，是哪一位？",
+    "options": [
+      "/quiz/static/uploads/Q14_1.webp",
+      "/quiz/static/uploads/Q14_A.webp",
+      "/quiz/static/uploads/Q14_2.webp",
+      "/quiz/static/uploads/Q14_3.webp"
+    ],
+    "correct": 1,
+    "time_limit": 10,
+    "option_type": "image",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "看圖猜答案",
+    "text": "今天的新娘，是哪一位？",
+    "options": [
+      "/quiz/static/uploads/Q15_1.webp",
+      "/quiz/static/uploads/Q15_2.webp",
+      "/quiz/static/uploads/Q15_A.webp",
+      "/quiz/static/uploads/Q15_3.webp"
+    ],
+    "correct": 2,
+    "time_limit": 10,
+    "option_type": "image",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "看圖猜答案",
+    "text": "以下哪一張，不是新娘小時候的照片？",
+    "options": [
+      "/quiz/static/uploads/Q16_A.webp",
+      "/quiz/static/uploads/Q16_1.webp",
+      "/quiz/static/uploads/Q16_2.webp",
+      "/quiz/static/uploads/Q16_3.webp"
+    ],
+    "correct": 0,
+    "time_limit": 10,
+    "option_type": "image",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "看圖猜答案",
+    "text": "以下哪一個，是新郎爸爸的關係企業？",
+    "options": [
+      "/quiz/static/uploads/Q17_1.webp",
+      "/quiz/static/uploads/Q17_2.webp",
+      "/quiz/static/uploads/Q17_3.webp",
+      "/quiz/static/uploads/Q17_A.webp"
+    ],
+    "correct": 3,
+    "time_limit": 10,
+    "option_type": "image",
+    "image": null,
+    "reveal_media": null
+  },
+  {
+    "category": "看圖猜答案",
+    "text": "以下哪一個，是新娘爸媽家會出現的匾額？",
+    "options": [
+      "/quiz/static/uploads/Q18_1.webp",
+      "/quiz/static/uploads/Q18_A.webp",
+      "/quiz/static/uploads/Q18_2.webp",
+      "/quiz/static/uploads/Q18_3.webp"
+    ],
+    "correct": 1,
+    "time_limit": 10,
+    "option_type": "image",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q18.webp"
+    }
+  },
+  {
+    "category": "終極考古題",
+    "text": "眾所周知，新郎英文很爛。在他當年考的指考英文中，下列何者正確？\n\nIndustrial waste must be carefully handled, or it will ______ the public water supply.",
+    "options": [
+      "facilitate",
+      "legitimate",
+      "contaminate",
+      "manipulate"
+    ],
+    "correct": 2,
+    "time_limit": 15,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q19.webp"
+    }
+  },
+  {
+    "category": "終極考古題",
+    "text": "103 年指考數乙有一位傳奇滿分人物——吳宛倫。當年她考的其中一題超簡單：座標平面上滿足 10<sup>x</sup> · 100<sup>y</sup> = 1000 的所有點 (x, y) 所形成的圖形，是下列哪一個？",
+    "options": [
+      "一直線",
+      "一個點",
+      "兩直線",
+      "一個圓"
+    ],
+    "correct": 0,
+    "time_limit": 15,
+    "option_type": "text",
+    "image": null,
+    "reveal_media": {
+      "type": "image",
+      "url": "/quiz/static/uploads/reveal/reveal_Q20.webp"
+    }
   }
 ]

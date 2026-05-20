@@ -100,33 +100,112 @@
     font-size: 1.15rem; font-weight: 700;
     color: var(--gold-light);
     letter-spacing: 1px;
+    display: flex; align-items: center; gap: 10px;
   }
   .header-title span { color: var(--text-muted); font-size: 0.9rem; font-family: 'Nunito', sans-serif; font-weight: 600; }
+
+  /* 連線狀態指示燈 */
+  #ws-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #666; flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  #ws-dot.connected    { background: var(--correct); box-shadow: 0 0 6px rgba(74,222,128,0.6); }
+  #ws-dot.connecting   { background: #f59e0b; animation: blink 0.8s ease-in-out infinite; }
+  #ws-dot.disconnected { background: #f87171; }
 
   .status-badge {
     padding: 5px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;
     letter-spacing: 0.5px; text-transform: uppercase;
   }
   .status-badge.lobby      { background: rgba(61,109,181,0.2); color: #5b9bd5; border: 1px solid rgba(61,109,181,0.4); }
+  .status-badge.category   { background: rgba(201,169,110,0.18); color: var(--gold-light); border: 1px solid rgba(201,169,110,0.4); }
   .status-badge.question   { background: rgba(74,222,128,0.15); color: var(--correct); border: 1px solid rgba(74,222,128,0.3); }
   .status-badge.reveal     { background: rgba(201,169,110,0.15); color: var(--gold-light); border: 1px solid rgba(201,169,110,0.3); }
+  .status-badge.fastest    { background: rgba(255,180,80,0.18); color: #ffcf72; border: 1px solid rgba(255,180,80,0.4); }
   .status-badge.leaderboard { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
   .status-badge.finished   { background: rgba(226,27,60,0.15); color: #f87171; border: 1px solid rgba(226,27,60,0.3); }
 
+  .fastest-summary {
+    background: linear-gradient(135deg, rgba(255,180,80,0.10), rgba(255,200,120,0.04));
+    border: 1px solid rgba(255,180,80,0.35);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .fastest-summary .fs-title {
+    font-size: 0.7rem; color: #ffcf72;
+    text-transform: uppercase; letter-spacing: 2px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .fastest-summary .fs-hero {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--gold-light); margin-bottom: 8px;
+  }
+  .fastest-summary .fs-hero-time {
+    font-size: 0.85rem; color: var(--correct); font-weight: 700;
+    margin-left: 8px;
+  }
+  .fastest-summary .fs-opts {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .fastest-summary .fs-opt {
+    flex: 1 1 calc(50% - 4px);
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+  }
+  .fastest-summary .fs-opt.correct {
+    border-color: var(--correct);
+    background: rgba(74,222,128,0.08);
+  }
+  .fastest-summary .fs-opt-label { font-weight: 900; margin-right: 4px; }
+  .fastest-summary .fs-opt.A .fs-opt-label { color: var(--opt-A); }
+  .fastest-summary .fs-opt.B .fs-opt-label { color: var(--opt-B); }
+  .fastest-summary .fs-opt.C .fs-opt-label { color: var(--opt-C); }
+  .fastest-summary .fs-opt.D .fs-opt-label { color: var(--opt-D); }
+  .fastest-summary .fs-opt-count { color: var(--text-main); font-weight: 700; }
+  .fastest-summary .fs-opt-fast { color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 3px; }
+
+  .cat-intro-info {
+    background: linear-gradient(135deg, rgba(201,169,110,0.12), rgba(240,208,128,0.06));
+    border: 1px solid var(--gold);
+    border-radius: 14px;
+    padding: 18px 22px;
+    text-align: center;
+    box-shadow: 0 0 24px var(--gold-glow);
+  }
+  .cat-intro-info .cat-tag {
+    font-size: 0.7rem; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 2px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .cat-intro-info .cat-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 900;
+    color: var(--gold-light); letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .cat-intro-info .cat-meta {
+    font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
+  }
+
   .main-body {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 0;
+    display: block;
     min-height: calc(100vh - 53px - 110px);
   }
 
-  /* ── 左：控制區 ── */
+  /* ── 控制區 ── */
   .ctrl-panel {
-    padding: 24px;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    border-right: 1px solid var(--border);
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   .info-row { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -206,6 +285,11 @@
   }
   .btn-reload:not(:disabled):hover { border-color: var(--gold); color: var(--gold-light); }
 
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
   /* 當前題目預覽 */
   .q-preview {
     background: var(--bg-card);
@@ -255,40 +339,6 @@
   }
   .answered-text { font-size: 0.8rem; color: var(--text-muted); text-align: right; font-weight: 600; margin-top: 4px; }
 
-  /* ── 右：玩家名單 ── */
-  .player-panel {
-    padding: 20px;
-    overflow-y: auto;
-    max-height: calc(100vh - 53px - 110px);
-    background: var(--bg-deep);
-    border-left: 1px solid var(--border);
-  }
-  .player-panel-title {
-    font-size: 0.75rem; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 2px;
-    margin-bottom: 14px; font-weight: 700;
-  }
-  .player-list { display: flex; flex-direction: column; gap: 6px; }
-  .player-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.88rem;
-    animation: slideUp 0.3s ease both;
-    transition: border-color 0.2s;
-  }
-  .player-item:hover { border-color: rgba(201,169,110,0.2); }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .player-name { font-weight: 700; color: var(--text-main); }
-  .player-score { color: var(--gold-light); font-size: 0.82rem; font-weight: 700; }
-  .player-answered { color: var(--correct); font-size: 0.72rem; font-weight: 700; }
 
   /* ── LOG ── */
   .log-area {
@@ -321,7 +371,7 @@
 <!-- MAIN -->
 <div id="screen-main">
   <div class="header">
-    <div class="header-title">🎛️ 婚禮問答 <span>— MC 控制台</span></div>
+    <div class="header-title">🎛️ 婚禮問答 <span>— MC 控制台</span><div id="ws-dot" class="disconnected" title="連線狀態"></div></div>
     <div id="phase-badge" class="status-badge lobby">大廳</div>
   </div>
 
@@ -352,6 +402,22 @@
         <div class="answered-text" id="answered-text">0 / 0 人已答</div>
       </div>
 
+      <!-- 類別過場資訊（CATEGORY_INTRO 階段顯示）-->
+      <div id="cat-intro-section" style="display:none">
+        <div class="section-title">即將進入</div>
+        <div class="cat-intro-info">
+          <div class="cat-tag" id="cat-intro-tag">CHAPTER 1 / 5</div>
+          <div class="cat-name" id="cat-intro-name">類別名稱</div>
+          <div class="cat-meta" id="cat-intro-meta">共 X 題</div>
+        </div>
+      </div>
+
+      <!-- 最快榜摘要（FASTEST_BREAKDOWN 階段顯示）-->
+      <div id="fastest-summary-section" style="display:none">
+        <div class="section-title">最快榜</div>
+        <div class="fastest-summary" id="fastest-summary"></div>
+      </div>
+
       <!-- 當前題目預覽 -->
       <div id="q-preview-section" style="display:none">
         <div class="section-title">當前題目</div>
@@ -367,17 +433,9 @@
       <button id="btn-start"    class="ctrl-btn btn-start"    onclick="sendCmd('start_game')">▶ 開始遊戲</button>
       <button id="btn-continue" class="ctrl-btn btn-continue" onclick="doContinue()" disabled>📢 公佈答案</button>
 
-      <button class="ctrl-btn btn-reload" onclick="sendCmd('reload_questions')">🔄 重新載入題目</button>
       <button class="ctrl-btn btn-reset"  onclick="confirmReset()">⚠️ 重置遊戲</button>
     </div>
 
-    <!-- 玩家名單 -->
-    <div class="player-panel">
-      <div class="player-panel-title">玩家名單</div>
-      <div class="player-list" id="player-list">
-        <div style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">等待玩家加入...</div>
-      </div>
-    </div>
   </div>
 
   <div class="log-area" id="log-area"></div>
@@ -388,6 +446,13 @@ const WS_URL = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.ho
 let ws, password = '';
 let players = {};
 let currentPhase = 'LOBBY';
+let reconnectTimer = null;   // 防止重複排程
+
+// ── 連線狀態燈 ──
+function setDot(state) { // 'connected' | 'connecting' | 'disconnected'
+  const dot = document.getElementById('ws-dot');
+  if (dot) dot.className = state;
+}
 
 function doLogin() {
   password = document.getElementById('pw-input').value;
@@ -399,22 +464,52 @@ document.getElementById('pw-input').addEventListener('keydown', e => {
 });
 
 function connectWS() {
+  // ── Guard：已在 CONNECTING 或 OPEN 就不重複建立 ──
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
+
+  clearTimeout(reconnectTimer);
+  setDot('connecting');
+
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
     ws.send(JSON.stringify({ type: 'host', password }));
   };
   ws.onmessage = e => handleMsg(JSON.parse(e.data));
   ws.onclose = () => {
-    log('連線斷開，2秒後重連...');
-    setTimeout(() => { if (document.getElementById('screen-main').style.display !== 'none') connectWS(); }, 2000);
+    setDot('disconnected');
+    if (!password) return;          // 尚未登入，不自動重連
+    log('⚠️ 連線中斷，重新連線...');
+    scheduleReconnect();
   };
   ws.onerror = () => ws.close();
 }
 
+function scheduleReconnect() {
+  if (reconnectTimer) return;       // 已有排程，不重複
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connectWS();
+  }, 1000);                         // 1 秒（原本 2 秒，縮短讓 iOS 回來更快恢復）
+}
+
+// ── iOS 關鍵修復：螢幕亮回來時立刻重連 ──
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && password) {
+    if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+      log('📱 頁面恢復，重新連線...');
+      connectWS();
+    }
+  }
+});
+
 function sendCmd(action) {
-  if (ws && ws.readyState === 1) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ action }));
     log(`> ${action}`);
+  } else {
+    log('⚠️ 連線未就緒，請稍後再按...');
+    // 立刻嘗試重連，讓用戶只需再按一次
+    if (password) connectWS();
   }
 }
 
@@ -423,9 +518,13 @@ function confirmReset() {
 }
 
 function doContinue() {
-  if (currentPhase === 'QUESTION_ENDED') {
+  if (currentPhase === 'CATEGORY_INTRO') {
+    sendCmd('start_category_questions');
+  } else if (currentPhase === 'QUESTION_ENDED') {
     sendCmd('reveal_answer');
   } else if (currentPhase === 'REVEAL') {
+    sendCmd('show_fastest');
+  } else if (currentPhase === 'FASTEST_BREAKDOWN') {
     sendCmd('show_leaderboard');
   } else if (currentPhase === 'LEADERBOARD') {
     sendCmd('next_question');
@@ -443,32 +542,60 @@ function log(msg) {
 function updateButtons(phase) {
   const b = id => document.getElementById(id);
   currentPhase = phase;
-  b('btn-start').disabled = phase !== 'LOBBY';
+  // LOBBY 階段才顯示「開始遊戲」按鈕,其他階段隱藏避免視覺干擾(主控按鈕是 btn-continue)
+  const startBtn = b('btn-start');
+  startBtn.disabled = phase !== 'LOBBY';
+  startBtn.style.display = phase === 'LOBBY' ? '' : 'none';
 
   const btn = b('btn-continue');
-  if (phase === 'QUESTION_ENDED') {
+  if (phase === 'CATEGORY_INTRO') {
+    btn.disabled = false;
+    btn.textContent = '🎬 開始本類別';
+    btn.style.background = 'linear-gradient(135deg, #C9A96E, #F0D080)';
+    btn.style.color = '#0a0a14';
+  } else if (phase === 'QUESTION_ENDED') {
     btn.disabled = false;
     btn.textContent = '📢 公佈答案';
     btn.style.background = 'linear-gradient(135deg,#e55,#c33)';
+    btn.style.color = '';
   } else if (phase === 'REVEAL') {
+    btn.disabled = false;
+    btn.textContent = '🎤 顯示最快榜';
+    btn.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+    btn.style.color = '#0a0a14';
+  } else if (phase === 'FASTEST_BREAKDOWN') {
     btn.disabled = false;
     btn.textContent = '🏆 排行榜';
     btn.style.background = '';
+    btn.style.color = '';
   } else if (phase === 'LEADERBOARD') {
     btn.disabled = false;
     btn.textContent = '⏭ 下一題';
     btn.style.background = '';
+    btn.style.color = '';
   } else {
     btn.disabled = true;
     btn.textContent = '📢 公佈答案';
     btn.style.background = '';
+    btn.style.color = '';
   }
 
   document.getElementById('answer-progress-section').style.display =
     (phase === 'QUESTION' || phase === 'QUESTION_ENDED') ? 'block' : 'none';
 
-  const phaseMap = { LOBBY:'大廳', QUESTION:'作答中', QUESTION_ENDED:'等待公佈', REVEAL:'揭曉', LEADERBOARD:'排行榜', FINISHED:'結束' };
-  const badgeMap = { LOBBY:'lobby', QUESTION:'question', QUESTION_ENDED:'question', REVEAL:'reveal', LEADERBOARD:'leaderboard', FINISHED:'finished' };
+  document.getElementById('cat-intro-section').style.display =
+    (phase === 'CATEGORY_INTRO') ? 'block' : 'none';
+
+  document.getElementById('fastest-summary-section').style.display =
+    (phase === 'FASTEST_BREAKDOWN') ? 'block' : 'none';
+
+  // CATEGORY_INTRO 時隱藏「當前題目」預覽,避免提前洩題
+  if (phase === 'CATEGORY_INTRO') {
+    document.getElementById('q-preview-section').style.display = 'none';
+  }
+
+  const phaseMap = { LOBBY:'大廳', CATEGORY_INTRO:'類別過場', QUESTION:'作答中', QUESTION_ENDED:'等待公佈', REVEAL:'揭曉', FASTEST_BREAKDOWN:'最快榜', LEADERBOARD:'排行榜', FINISHED:'結束' };
+  const badgeMap = { LOBBY:'lobby', CATEGORY_INTRO:'category', QUESTION:'question', QUESTION_ENDED:'question', REVEAL:'reveal', FASTEST_BREAKDOWN:'fastest', LEADERBOARD:'leaderboard', FINISHED:'finished' };
   const badge = document.getElementById('phase-badge');
   badge.textContent = phaseMap[phase] || phase;
   badge.className = `status-badge ${badgeMap[phase] || ''}`;
@@ -511,6 +638,7 @@ function updatePlayerList(data) {
 
 function renderPlayers() {
   const list = document.getElementById('player-list');
+  if (!list) return;
   const names = Object.values(players);
   if (names.length === 0) {
     list.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">等待玩家加入...</div>';
@@ -539,6 +667,7 @@ function handleMsg(data) {
       document.getElementById('info-players').textContent = data.player_count;
       document.getElementById('info-q').textContent = data.current_index >= 0 ? data.current_index + 1 : '-';
       updateButtons(data.phase);
+      setDot('connected');
       log('✅ 已連線');
       break;
 
@@ -549,6 +678,16 @@ function handleMsg(data) {
       data.nicknames.forEach(n => { players[n] = { nickname: n, score: 0 }; });
       renderPlayers();
       log(`玩家加入，目前 ${data.count} 人`);
+      break;
+
+    case 'category_intro':
+      updateButtons('CATEGORY_INTRO');
+      document.getElementById('cat-intro-tag').textContent =
+        `CHAPTER ${data.category_index} / ${data.category_total}`;
+      document.getElementById('cat-intro-name').textContent = data.category;
+      document.getElementById('cat-intro-meta').textContent = `共 ${data.questions_in_category} 題`;
+      document.getElementById('info-q').textContent = (data.next_question_index + 1) + ' ⏳';
+      log(`🎬 進入類別：${data.category}（共 ${data.questions_in_category} 題）`);
       break;
 
     case 'question_start':
@@ -587,6 +726,12 @@ function handleMsg(data) {
       log(`✅ 答案公佈：${['A','B','C','D'][data.correct]}`);
       break;
 
+    case 'option_breakdown':
+      updateButtons('FASTEST_BREAKDOWN');
+      renderFastestSummary(data);
+      log(`🎤 最快榜：${data.fastest_correct ? data.fastest_correct.nickname + ' ' + data.fastest_correct.time.toFixed(2) + 's' : '無人答對'}`);
+      break;
+
     case 'leaderboard':
       updateButtons('LEADERBOARD');
       log('🏆 排行榜顯示');
@@ -614,6 +759,32 @@ function handleMsg(data) {
 }
 
 function id(x) { return document.getElementById(x); }
+
+// ── 最快榜 host 摘要 ──
+function renderFastestSummary(data) {
+  const el = document.getElementById('fastest-summary');
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const heroHtml = data.fastest_correct
+    ? `<div class="fs-title">🥇 最快答對</div>
+       <div class="fs-hero">${escapeHtml(data.fastest_correct.nickname)}<span class="fs-hero-time">${data.fastest_correct.time.toFixed(2)} 秒</span></div>`
+    : `<div class="fs-title">🥇 最快答對</div>
+       <div class="fs-hero" style="font-size:1rem;color:var(--text-muted);font-style:italic">這題沒人答對 😅</div>`;
+
+  const optsHtml = '<div class="fs-opts">' + data.options.map(opt => {
+    const isCorrect = opt.index === data.correct;
+    const fastest = opt.fastest
+      ? `<span class="fs-opt-fast">最快：${escapeHtml(opt.fastest.nickname)} (${opt.fastest.time.toFixed(2)}s)</span>`
+      : `<span class="fs-opt-fast" style="font-style:italic;opacity:0.5">無人選</span>`;
+    return `<div class="fs-opt ${opt.label}${isCorrect ? ' correct' : ''}">
+      <span class="fs-opt-label">${opt.label}</span>
+      <span class="fs-opt-count">${opt.count} 人</span>
+      ${fastest}
+    </div>`;
+  }).join('') + '</div>';
+
+  el.innerHTML = heroHtml + optsHtml;
+}
 </script>
 </body>
 </html>

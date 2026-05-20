@@ -13,7 +13,7 @@ from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 BASE_DIR    = Path(__file__).parent
@@ -21,7 +21,7 @@ STATIC_DIR  = BASE_DIR / "static"
 UPLOADS_DIR = BASE_DIR / "static" / "uploads"
 QUESTIONS_FILE = BASE_DIR / "questions.json"
 
-HOST_PASSWORD = "kai2026"   # MC 登入密碼，可自行更改
+HOST_PASSWORD = "141319"   # MC 登入密碼，可自行更改
 PORT = 8001                  # 與彈幕系統 (8000) 分開
 
 # ─────────────────────────────────────────────
@@ -30,10 +30,13 @@ PORT = 8001                  # 與彈幕系統 (8000) 分開
 class GameState:
     def __init__(self):
         self.phase = "LOBBY"
-        # LOBBY → QUESTION → REVEAL → LEADERBOARD → (loop) → FINISHED
+        # LOBBY → CATEGORY_INTRO → QUESTION → REVEAL → LEADERBOARD → (loop) → FINISHED
         self.current_q_index = -1
         self.question_start_time: Optional[float] = None
         self.questions: list[dict] = []
+        # 過場用：當前類別、預備下一題的 index
+        self.current_category: Optional[str] = None
+        self.pending_q_index: int = -1
 
         # 連線管理
         self.players:  dict[str, dict] = {}  # conn_id → {nickname, score, ws, last_points}
@@ -42,9 +45,17 @@ class GameState:
 
         # 本輪答案
         self.answers: dict[str, int] = {}    # conn_id → option_index (0-3)
+        # 本輪答題時間（從題目開始算起的秒數,用於最快榜 + 計分）
+        self.answer_times: dict[str, float] = {}  # conn_id → elapsed_seconds
 
         # 倒數計時任務
         self.timer_task: Optional[asyncio.Task] = None
+
+        # 重連用：display/host 端的最後一次廣播 payload（不含玩家個人化資料）
+        self.last_question_payload: Optional[dict] = None
+        self.last_reveal_payload_display: Optional[dict] = None
+        self.last_option_breakdown_payload: Optional[dict] = None
+        self.last_leaderboard_payload: Optional[dict] = None
 
         # 本輪隨機排列後的選項與正確答案 index
         self.shuffled_options: list = []
@@ -63,10 +74,12 @@ class GameState:
             return self.questions[self.current_q_index]
         return None
 
-    # ── 計分 ──
+    # ── 計分（毫秒級,避免同秒同分）──
     def calc_score(self, seconds_elapsed: float) -> int:
-        deduction = int(seconds_elapsed) * 50
-        return max(100, 1000 - deduction)
+        # 每秒扣 50 分,毫秒粒度
+        # 0.000s → 1000, 1.235s → 938, 9.987s → 501, 15s → 250(終極),最低 100
+        deduction = seconds_elapsed * 50
+        return max(100, int(round(1000 - deduction)))
 
     # ── 答案分布 ──
     def get_answer_distribution(self) -> list[int]:
@@ -112,14 +125,15 @@ class GameState:
         await self.broadcast(data, self.displays + self.hosts)
 
     async def broadcast_players(self, data: dict):
-        dead_ids = []
+        # 失敗的連線標記為 disconnected,保留 record(score)等待重連 — 不直接 pop
         for conn_id, p in list(self.players.items()):
+            if p.get("disconnected") or p.get("ws") is None:
+                continue
             try:
                 await p["ws"].send_json(data)
             except Exception:
-                dead_ids.append(conn_id)
-        for cid in dead_ids:
-            self.players.pop(cid, None)
+                p["disconnected"] = True
+                p["ws"] = None
 
     async def send_to(self, ws: WebSocket, data: dict):
         try:
@@ -127,12 +141,13 @@ class GameState:
         except Exception:
             pass
 
-    # ── 玩家數量廣播 ──
+    # ── 玩家數量廣播（排除已斷線等待重連者）──
     async def broadcast_player_count(self):
+        active = [p for p in self.players.values() if not p.get("disconnected")]
         await self.broadcast_displays_hosts({
             "type": "player_count",
-            "count": len(self.players),
-            "nicknames": [p["nickname"] for p in self.players.values()],
+            "count": len(active),
+            "nicknames": [p["nickname"] for p in active],
         })
 
 
@@ -142,22 +157,156 @@ game = GameState()
 # ─────────────────────────────────────────────
 # 遊戲流程函數
 # ─────────────────────────────────────────────
+def _category_stats(target_index: int) -> dict:
+    """計算 target_index 題目所屬類別在整個題庫中的位置統計。"""
+    if not game.questions or target_index >= len(game.questions):
+        return {"category": "", "category_index": 0, "category_total": 0,
+                "questions_in_category": 0}
+    target_cat = game.questions[target_index].get("category", "")
+    # 統計所有類別（按出現順序去重）
+    ordered_cats = []
+    for q in game.questions:
+        c = q.get("category", "")
+        if c and c not in ordered_cats:
+            ordered_cats.append(c)
+    cat_idx = ordered_cats.index(target_cat) + 1 if target_cat in ordered_cats else 0
+    in_cat_count = sum(1 for q in game.questions if q.get("category", "") == target_cat)
+    return {
+        "category": target_cat,
+        "category_index": cat_idx,
+        "category_total": len(ordered_cats),
+        "questions_in_category": in_cat_count,
+    }
+
+
+def _build_category_intro_payload(target_index: int) -> dict:
+    stats = _category_stats(target_index)
+    return {
+        "type": "category_intro",
+        "category": stats["category"],
+        "category_index": stats["category_index"],
+        "category_total": stats["category_total"],
+        "questions_in_category": stats["questions_in_category"],
+        "next_question_index": target_index,
+        "total_questions": len(game.questions),
+    }
+
+
+async def _send_category_intro(target_index: int):
+    """進入類別過場畫面（主持人按下一題後才會切到 QUESTION）"""
+    game.phase = "CATEGORY_INTRO"
+    game.pending_q_index = target_index
+    stats = _category_stats(target_index)
+    game.current_category = stats["category"]
+    await game.broadcast_all(_build_category_intro_payload(target_index))
+
+
+async def _resync_player_to(ws: WebSocket, conn_id: str):
+    """玩家加入/重連後,依當前 phase 補送對應畫面訊息。"""
+    phase = game.phase
+    if phase == "CATEGORY_INTRO" and game.pending_q_index >= 0:
+        await game.send_to(ws, _build_category_intro_payload(game.pending_q_index))
+    elif phase in ("QUESTION", "QUESTION_ENDED") and game.current_question:
+        q = game.current_question
+        elapsed = (time.time() - game.question_start_time) if game.question_start_time else 0
+        remaining = max(0, q.get("time_limit", 10) - elapsed)
+        await game.send_to(ws, {
+            "type": "question_start",
+            "index": game.current_q_index,
+            "total": len(game.questions),
+            "text": q["text"],
+            "image": q.get("image"),
+            "options": game.shuffled_options,
+            "time_limit": q.get("time_limit", 10),
+            "remaining": remaining,
+            "option_type": q.get("option_type", "text"),
+        })
+        # 若已答過(接管 record 後或重連),通知前端切到 selected 畫面
+        if conn_id in game.answers:
+            await game.send_to(ws, {
+                "type": "answer_received",
+                "option": game.answers[conn_id],
+            })
+    elif phase in ("REVEAL", "FASTEST_BREAKDOWN") and game.current_question:
+        # FASTEST_BREAKDOWN 階段,玩家手機仍停在 REVEAL 畫面
+        q = game.current_question
+        correct = game.shuffled_correct
+        correct_text = (game.shuffled_options[correct]
+                        if 0 <= correct < len(game.shuffled_options) else "")
+        p = game.players.get(conn_id, {})
+        last_opt = game.answers.get(conn_id)
+        answered = last_opt is not None
+        await game.send_to(ws, {
+            "type": "answer_reveal",
+            "correct": correct,
+            "correct_text": correct_text,
+            "option_type": q.get("option_type", "text"),
+            "options": game.shuffled_options,   # 給重連用,前端可立刻渲染正確答案大圖
+            "reveal_media": q.get("reveal_media"),
+            "personal_correct": (last_opt == correct) if answered else False,
+            "points_earned": p.get("last_points", 0),
+            "total_score": p.get("score", 0),
+            "answered": answered,
+        })
+    elif phase == "LEADERBOARD" and game.last_leaderboard_payload:
+        await game.send_to(ws, game.last_leaderboard_payload)
+    elif phase == "FINISHED":
+        await game.send_to(ws, {
+            "type": "game_finish",
+            "leaderboard": game.get_full_leaderboard(),
+        })
+
+
+async def _resync_phase_to(ws: WebSocket):
+    """display/host 重連時,根據當前 phase 補送對應的最後一次廣播。"""
+    phase = game.phase
+    if phase == "CATEGORY_INTRO" and game.pending_q_index >= 0:
+        await game.send_to(ws, _build_category_intro_payload(game.pending_q_index))
+    elif phase in ("QUESTION", "QUESTION_ENDED") and game.last_question_payload:
+        payload = dict(game.last_question_payload)
+        # 計算剩餘時間,讓重連端顯示正確倒數
+        if game.question_start_time:
+            elapsed = time.time() - game.question_start_time
+            remaining = max(0, payload.get("time_limit", 10) - elapsed)
+            payload["remaining"] = remaining
+        await game.send_to(ws, payload)
+    elif phase == "REVEAL" and game.last_reveal_payload_display:
+        await game.send_to(ws, game.last_reveal_payload_display)
+    elif phase == "FASTEST_BREAKDOWN" and game.last_option_breakdown_payload:
+        await game.send_to(ws, game.last_option_breakdown_payload)
+    elif phase == "LEADERBOARD" and game.last_leaderboard_payload:
+        await game.send_to(ws, game.last_leaderboard_payload)
+    elif phase == "FINISHED" and game.last_leaderboard_payload:
+        # FINISHED 階段補送最終排行榜（用 finish 訊息）
+        await game.send_to(ws, {
+            "type": "game_finish",
+            "leaderboard": game.get_full_leaderboard(),
+        })
+
+
 async def start_game():
     game.load_questions()
     if not game.questions:
         return
-    game.current_q_index = 0
-    await _send_question()
+    # 第一題前先顯示類別過場
+    await _send_category_intro(0)
 
 
 async def _send_question():
+    # 若處於過場階段,正式進入該題
+    if game.phase == "CATEGORY_INTRO" and game.pending_q_index >= 0:
+        game.current_q_index = game.pending_q_index
+        game.pending_q_index = -1
+
     q = game.current_question
     if not q:
         await finish_game()
         return
 
+    game.current_category = q.get("category", "")
     game.phase = "QUESTION"
     game.answers = {}
+    game.answer_times = {}
     game.question_start_time = time.time()
 
     # 取消舊計時
@@ -176,29 +325,25 @@ async def _send_question():
     game.shuffled_options = shuffled_opts
     game.shuffled_correct = shuffled_correct
 
+    question_payload = {
+        "type": "question_start",
+        "index": game.current_q_index,
+        "total": len(game.questions),
+        "text": q["text"],
+        "image": q.get("image"),
+        "options": shuffled_opts,
+        "time_limit": time_limit,
+        "option_type": q.get("option_type", "text"),
+    }
     # 給 display/host 完整資訊（含洗牌後選項）
-    await game.broadcast_displays_hosts({
-        "type": "question_start",
-        "index": game.current_q_index,
-        "total": len(game.questions),
-        "text": q["text"],
-        "image": q.get("image"),
-        "options": shuffled_opts,
-        "time_limit": time_limit,
-        "option_type": q.get("option_type", "text"),
-    })
-
-    # 給玩家只送選項（不送正確答案）
-    await game.broadcast_players({
-        "type": "question_start",
-        "index": game.current_q_index,
-        "total": len(game.questions),
-        "text": q["text"],
-        "image": q.get("image"),
-        "options": shuffled_opts,
-        "time_limit": time_limit,
-        "option_type": q.get("option_type", "text"),
-    })
+    await game.broadcast_displays_hosts(question_payload)
+    # 給玩家只送選項（不送正確答案）— 結構同上
+    await game.broadcast_players(question_payload)
+    # 快取以供 display/host 斷線重連
+    game.last_question_payload = question_payload
+    # 進入新題時清掉舊 reveal/leaderboard 快取
+    game.last_reveal_payload_display = None
+    game.last_leaderboard_payload = None
 
     # 自動倒數計時（時間到只通知 host，不自動公佈答案）
     game.timer_task = asyncio.create_task(_auto_timer_end(time_limit))
@@ -224,13 +369,13 @@ async def reveal_answer():
     correct = game.shuffled_correct
     distribution = game.get_answer_distribution()
 
-    # 計分
-    now = time.time()
+    # 計分：使用「玩家提交瞬間」的 elapsed,而非揭曉當下的 elapsed
+    # 這樣主持人在 QUESTION_ENDED 停留多久都不影響分數
     for conn_id, opt in game.answers.items():
         if conn_id not in game.players:
             continue
         if opt == correct:
-            elapsed = now - game.question_start_time
+            elapsed = game.answer_times.get(conn_id, 0)
             pts = game.calc_score(elapsed)
             game.players[conn_id]["score"] += pts
             game.players[conn_id]["last_points"] = pts
@@ -246,6 +391,7 @@ async def reveal_answer():
         "correct": correct,
         "correct_text": correct_text,
         "option_type": option_type,
+        "options": game.shuffled_options,   # 重連補送時前端可還原 currentOptions
         "distribution": distribution,
         "reveal_media": q.get("reveal_media"),
         "leaderboard": leaderboard,
@@ -254,9 +400,12 @@ async def reveal_answer():
     }
     # 大螢幕 + host 看到公佈畫面
     await game.broadcast_displays_hosts(reveal_payload)
+    game.last_reveal_payload_display = reveal_payload
 
     # 玩家手機：個人成績 + 正確答案（讓手機也顯示答案大圖）
     for conn_id, p in game.players.items():
+        if p.get("disconnected") or p.get("ws") is None:
+            continue  # 已斷線的玩家保留 score,等重連時補送
         answered = conn_id in game.answers
         correct_ans = game.answers.get(conn_id) == correct
         await game.send_to(p["ws"], {
@@ -272,25 +421,82 @@ async def reveal_answer():
         })
 
 
+def _build_option_breakdown_payload() -> dict:
+    """組裝「最快榜」資料:每個選項的人數 + 該選項最快搶答者。"""
+    correct = game.shuffled_correct
+    options_data = []
+    for i in range(4):
+        picks = []
+        for conn_id, opt in game.answers.items():
+            if opt == i and conn_id in game.players:
+                p = game.players[conn_id]
+                t = game.answer_times.get(conn_id, 0.0)
+                picks.append({"nickname": p["nickname"], "time": round(t, 2)})
+        picks.sort(key=lambda x: x["time"])
+        options_data.append({
+            "index": i,
+            "label": "ABCD"[i],
+            "count": len(picks),
+            "fastest": picks[0] if picks else None,
+            "option_text": game.shuffled_options[i] if i < len(game.shuffled_options) else "",
+        })
+    fastest_correct = options_data[correct]["fastest"] if 0 <= correct < 4 else None
+    return {
+        "type": "option_breakdown",
+        "correct": correct,
+        "options": options_data,
+        "fastest_correct": fastest_correct,
+        "option_type": (game.current_question or {}).get("option_type", "text"),
+        "total_answered": len(game.answers),
+        "total_players": len(game.players),
+    }
+
+
+async def show_fastest():
+    """主持人按「顯示最快榜」,從 REVEAL 進入 FASTEST_BREAKDOWN。"""
+    if game.phase != "REVEAL":
+        return
+    game.phase = "FASTEST_BREAKDOWN"
+    payload = _build_option_breakdown_payload()
+    await game.broadcast_displays_hosts(payload)
+    game.last_option_breakdown_payload = payload
+
+
 async def show_leaderboard():
-    if game.phase not in ("REVEAL",):
+    # 接受從 REVEAL 或 FASTEST_BREAKDOWN 進入(向下相容自動化測試直接 REVEAL→LEADERBOARD)
+    if game.phase not in ("REVEAL", "FASTEST_BREAKDOWN"):
         return
     game.phase = "LEADERBOARD"
-    await game.broadcast_all({
+    payload = {
         "type": "leaderboard",
-        "leaderboard": game.get_leaderboard(),
+        "leaderboard": game.get_full_leaderboard(),
         "is_final": False,
-    })
+    }
+    await game.broadcast_all(payload)
+    game.last_leaderboard_payload = payload
 
 
 async def next_question():
     if game.phase != "LEADERBOARD":
         return
-    game.current_q_index += 1
-    if game.current_q_index >= len(game.questions):
+    next_idx = game.current_q_index + 1
+    if next_idx >= len(game.questions):
         await finish_game()
+        return
+    # 跨類別時先插入過場;同類別直接出題
+    next_cat = game.questions[next_idx].get("category", "")
+    if next_cat and next_cat != game.current_category:
+        await _send_category_intro(next_idx)
     else:
+        game.current_q_index = next_idx
         await _send_question()
+
+
+async def start_category_questions():
+    """主持人按「開始本類別」,從 CATEGORY_INTRO 進入 QUESTION"""
+    if game.phase != "CATEGORY_INTRO":
+        return
+    await _send_question()
 
 
 async def finish_game():
@@ -306,9 +512,16 @@ async def finish_game():
 async def reset_game():
     game.phase = "LOBBY"
     game.current_q_index = -1
+    game.pending_q_index = -1
+    game.current_category = None
     game.question_start_time = None
     game.answers = {}
+    game.answer_times = {}
     game.players = {}
+    game.last_question_payload = None
+    game.last_reveal_payload_display = None
+    game.last_option_breakdown_payload = None
+    game.last_leaderboard_payload = None
     if game.timer_task and not game.timer_task.done():
         game.timer_task.cancel()
     await game.broadcast_all({"type": "game_reset"})
@@ -356,6 +569,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "player_count": len(game.players),
                 "total_questions": len(game.questions),
             })
+            await _resync_phase_to(websocket)
 
         elif conn_type == "host":
             if msg.get("password") != HOST_PASSWORD:
@@ -369,45 +583,68 @@ async def websocket_endpoint(websocket: WebSocket):
                 "total_questions": len(game.questions),
                 "current_index": game.current_q_index,
             })
+            await _resync_phase_to(websocket)
 
         elif conn_type == "player":
             nickname = msg.get("nickname", "").strip()[:20]
             if not nickname:
                 await game.send_to(websocket, {"type": "error", "msg": "請輸入暱稱"})
                 return
-            # 暱稱重複檢查
-            existing_names = [p["nickname"] for p in game.players.values()]
-            if nickname in existing_names:
-                nickname = f"{nickname}_{conn_id[-3:]}"
 
-            game.players[conn_id] = {
-                "nickname": nickname,
-                "score": 0,
-                "last_points": 0,
-                "ws": websocket,
-            }
+            # === 同名重連檢查 ===
+            # 若同 nickname 的玩家已斷線:接管其 record(score / 已答內容轉到新 conn_id)
+            # 若同 nickname 的玩家還在線:加流水號後綴(避免雙開頂掉)
+            rejoined = False
+            for old_cid, op in list(game.players.items()):
+                if op["nickname"] != nickname:
+                    continue
+                if op.get("disconnected"):
+                    # 接管舊 record
+                    game.players[conn_id] = {
+                        "nickname": op["nickname"],
+                        "score": op["score"],
+                        "last_points": op.get("last_points", 0),
+                        "ws": websocket,
+                        "disconnected": False,
+                    }
+                    # 轉移本輪答案 / 答題時間
+                    if old_cid in game.answers:
+                        game.answers[conn_id] = game.answers[old_cid]
+                        del game.answers[old_cid]
+                    if old_cid in game.answer_times:
+                        game.answer_times[conn_id] = game.answer_times[old_cid]
+                        del game.answer_times[old_cid]
+                    del game.players[old_cid]
+                    rejoined = True
+                else:
+                    # 同名在線:加後綴
+                    existing_names = set(pp["nickname"] for pp in game.players.values())
+                    base = nickname
+                    suffix = 2
+                    while f"{base}_{suffix}" in existing_names:
+                        suffix += 1
+                    nickname = f"{base}_{suffix}"
+                break
+
+            if not rejoined:
+                game.players[conn_id] = {
+                    "nickname": nickname,
+                    "score": 0,
+                    "last_points": 0,
+                    "ws": websocket,
+                    "disconnected": False,
+                }
+
             await game.send_to(websocket, {
                 "type": "joined",
-                "nickname": nickname,
+                "nickname": game.players[conn_id]["nickname"],
                 "phase": game.phase,
+                "score": game.players[conn_id]["score"],
+                "rejoined": rejoined,
             })
             await game.broadcast_player_count()
-            # 如果已在進行中，送當前題目
-            if game.phase == "QUESTION" and game.current_question:
-                q = game.current_question
-                elapsed = time.time() - game.question_start_time
-                remaining = max(0, q.get("time_limit", 20) - elapsed)
-                await game.send_to(websocket, {
-                    "type": "question_start",
-                    "index": game.current_q_index,
-                    "total": len(game.questions),
-                    "text": q["text"],
-                    "image": q.get("image"),
-                    "options": game.shuffled_options,   # 使用本輪洗牌後的順序
-                    "time_limit": q.get("time_limit", 20),
-                    "remaining": remaining,
-                    "option_type": q.get("option_type", "text"),
-                })
+            # 依當前 phase 補送對應訊息,讓重連玩家立刻切到正確畫面
+            await _resync_player_to(websocket, conn_id)
         else:
             return
 
@@ -423,6 +660,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     opt = int(msg.get("option", -1))
                     if 0 <= opt <= 3:
                         game.answers[conn_id] = opt
+                        # 記錄提交時間(用於最快榜 + 精準計分)
+                        if game.question_start_time:
+                            game.answer_times[conn_id] = time.time() - game.question_start_time
                         await game.send_to(websocket, {"type": "answer_received", "option": opt})
                         # 通知 host/display 答題人數
                         await game.broadcast_displays_hosts({
@@ -431,13 +671,22 @@ async def websocket_endpoint(websocket: WebSocket):
                             "total": len(game.players),
                         })
                         # 所有人都答了也繼續等計時，由 MC 或 timer 控制揭曉
+                elif game.phase in ("LOBBY", "FINISHED"):
+                    # 遊戲尚未開始或已結束,回 error 讓玩家端可記錄/顯示
+                    await game.send_to(websocket, {
+                        "type": "error", "msg": "遊戲尚未開始" if game.phase == "LOBBY" else "遊戲已結束"
+                    })
 
             # Host 指令
             elif conn_type == "host":
                 if action == "start_game":
                     await start_game()
+                elif action == "start_category_questions":
+                    await start_category_questions()
                 elif action == "reveal_answer":
                     await reveal_answer()
+                elif action == "show_fastest":
+                    await show_fastest()
                 elif action == "show_leaderboard":
                     await show_leaderboard()
                 elif action == "next_question":
@@ -462,7 +711,10 @@ async def websocket_endpoint(websocket: WebSocket):
         elif conn_type == "host" and websocket in game.hosts:
             game.hosts.remove(websocket)
         elif conn_type == "player" and conn_id in game.players:
-            del game.players[conn_id]
+            # 不直接刪除:標記 disconnected,保留 score 等待同名重連
+            game.players[conn_id]["disconnected"] = True
+            game.players[conn_id]["ws"] = None
+            game.players[conn_id]["disconnected_at"] = time.time()
             await game.broadcast_player_count()
 
 
@@ -472,6 +724,23 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/display", response_class=HTMLResponse)
 async def display_page():
     return HTMLResponse((STATIC_DIR / "display.html").read_text("utf-8"))
+
+@app.get("/sw.js")
+async def service_worker():
+    """PWA Service Worker — root scope 才能控制 /quiz/display"""
+    return FileResponse(
+        str(STATIC_DIR / "sw-quiz.js"),
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/quiz/"},
+    )
+
+@app.get("/manifest.json")
+async def pwa_manifest():
+    """PWA Manifest for 問答大螢幕"""
+    return FileResponse(
+        str(STATIC_DIR / "manifest-quiz.json"),
+        media_type="application/manifest+json",
+    )
 
 @app.get("/play", response_class=HTMLResponse)
 async def play_page():
@@ -484,6 +753,10 @@ async def host_page():
 @app.get("/")
 async def root():
     return {"status": "婚禮問答遊戲運行中 🎮", "play": "/play", "display": "/display", "host": "/host"}
+
+@app.get("/favicon.ico")
+async def favicon():
+    return Response(status_code=204)
 
 # ── 上傳媒體（供出題用）──
 @app.post("/api/upload")

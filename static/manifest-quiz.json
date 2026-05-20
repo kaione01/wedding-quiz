@@ -1,0 +1,25 @@
+{
+  "name": "Bella & Kai ♥ 婚禮問答",
+  "short_name": "婚禮問答",
+  "description": "Bella & Kai 婚禮問答遊戲大螢幕",
+  "start_url": "/quiz/display",
+  "scope": "/quiz/",
+  "display": "fullscreen",
+  "background_color": "#080810",
+  "theme_color": "#C9A96E",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/quiz/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/quiz/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
